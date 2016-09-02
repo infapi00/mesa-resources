@@ -1,3 +1,7 @@
+This directory includes:
+
+PNG WORKAROUNDS
+===============
 In order to compile deqp you need png, and right now it is wrongly
 configured, so this directory includes two workarounds:
 
@@ -11,3 +15,9 @@ configured, so this directory includes two workarounds:
 You can use or the other.
 
 [1] https://android-review.googlesource.com/#/c/178701/
+
+SCRIPTS
+=======
+
+   * run-n-times-flaky-deqp-case.sh: run a deqp test n times, and
+     returns how many runs have passed. Useful for flaky tests.
