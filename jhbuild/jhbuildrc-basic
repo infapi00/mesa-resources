@@ -7,6 +7,7 @@ modules = ['mesa', 'demos']
 use_local_modulesets = True
 
 checkoutroot = os.path.expanduser('~/mesa/source')
+buildroot = None
 prefix = os.path.expanduser('~/mesa/install')
 
 os.environ['CFLAGS'] = '-Wall -g3 -O0 -ggdb3'
