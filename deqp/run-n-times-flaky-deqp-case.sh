@@ -12,7 +12,7 @@ PASS=0
 FAIL=0
 for (( i=1; i <= "$n"; i++ ));
 do
-    if [ $($@ | grep "Passed:        1/1 (100.00%)" | wc -l) -eq 1 ]
+    if [ $($@ | grep "Passed:        1/1"  | wc -l) -eq 1 ]
     then
         ((PASS=PASS+1))
         mv "TestResults.qpa" "TestResults_PASS"$PASS".qpa"
