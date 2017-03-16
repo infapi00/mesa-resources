@@ -1,0 +1,33 @@
+This scripts allow you to set a JHBuild environment to develop with
+Mesa as quick as possible.
+
+To do so, create a JHBUILD_CONFIG file and write a content like this:
+
+    $ cat JHBUILD_CONFIG
+    JHBUILD_MESA_ROOT=/opt/mesa
+    MESA_RESOURCES=""
+
+That will mean that you want to use `/opt/mesa` as your base working
+directory and that this repository resides at
+`/opt/mesa/mesa-resources.git` (change to another absolute paths if you
+have it somewher else).
+
+Once this is done, for building an environment intended for the
+**i965** mesa driver, you only have to **move to this directory** and
+run:
+
+    $ ./jhbuild-compile.sh i965
+    ...
+
+Once finished, you will have your environment set.
+
+Now, if you want to work inside the environment you will only have to run:
+
+    $ ./jhbuild.sh i965 shell
+    [JHBUILD}$
+
+This script works as a wrapper for the JHBuild so you can pass any
+argument JHBuild would accept.
+
+Additionally, you can set working environments for *i965*, *nouveau*,
+*radeon* and the proprietary *NVidia* and *AMD* drivers.
