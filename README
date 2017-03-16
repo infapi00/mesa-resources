@@ -9,3 +9,5 @@ A brief description of what it contains:
    dependencies for working on mesa.
 
  * deqp: basic stuff for deqp.
+
+ * piglit: tools and scripts to use with piglit.
