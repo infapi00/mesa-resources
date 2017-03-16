@@ -7,18 +7,19 @@ modules = ['mesa', 'demos']
 use_local_modulesets = True
 
 checkoutroot = os.path.expanduser('~/mesa/source')
-buildroot = None
+buildroot = os.path.expanduser('~/mesa/build')
 prefix = os.path.expanduser('~/mesa/install')
 
 os.environ['CFLAGS'] = '-Wall -g3 -O0 -ggdb3'
 os.environ['CXXFLAGS'] = '-Wall -g3 -O0 -ggdb3'
 
 autogenargs='--disable-static'
-makeargs = '-j8 V=1'
+
+# If you use ICECC you want much more cores
+makeargs = '-j16 V=1'
 
 
-module_autogenargs['mesa'] = '--disable-static --enable-debug --with-dri-drivers=i965 --with-gallium-drivers=swrast --with-vulkan-drivers=intel'
-#module_autogenargs['mesa'] = '--disable-static --enable-debug --with-dri-drivers=i965 --with-gallium-drivers=swrast'
+module_autogenargs['mesa'] = '--disable-static --enable-debug --with-dri-drivers=swrast,i965 --with-gallium-drivers=freedreno,swrast,vc4 --with-vulkan-drivers=intel'
 #module_autogenargs['mesa'] = '--disable-static --enable-debug --with-dri-drivers=i965 --without-gallium-drivers'
 module_autogenargs['demos'] = '--disable-static --enable-debug'
 

@@ -45,7 +45,7 @@
     </dependencies>
   </autotools>
 
-  <autotools id="drm" autogenargs="--enable-nouveau-experimental-api">
+  <autotools id="drm" autogenargs="--enable-nouveau-experimental-api --enable-etnaviv-experimental-api --enable-freedreno --enable-vc4">
     <branch repo="mesa"/>
   </autotools>
 
@@ -93,7 +93,7 @@
     </dependencies>
   </autotools>
 
-  <cmake id="waffle">
+  <cmake id="waffle" cmakeargs="-Dwaffle_has_glx=1">
     <branch repo="waffle-gl"/>
   </cmake>
 
@@ -285,4 +285,3 @@
     <branch repo="github" module="FreeRDP/FreeRDP" revision="master"/>
   </cmake>
 </moduleset>
-
