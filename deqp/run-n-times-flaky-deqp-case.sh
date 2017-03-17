@@ -1,4 +1,11 @@
 #!/bin/bash
+#
+# The purpose of this script is run a deqp/cts test n times
+# counting the number of times that pass and fail. It is
+# useful to debug flaky tests. In order to not lose the
+# test debug info (on TestResults.qpa) for each execution
+# it copies it to TestResults_PASS or TestResults_FAILS
+# respectively.
 
 if [ $# -lt 2 ]
 then
