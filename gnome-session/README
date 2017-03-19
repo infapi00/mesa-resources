@@ -1,0 +1,14 @@
+The files in this directory will help you to set an alternative
+JHBuild GNOME session for the GDM session chooser.
+
+The intention is to be able to run GNOME with the mesa drivers you
+choose.
+
+For that, you only have to set a JHBuild environment as described in
+the *jhbuild* directory, copy the `jhbuild-mesa-gnome.desktop` file to
+`/usr/share/xsessions` and the `jhbuild-mesa-gnome.session` file to
+`/usr/share/gnome-session/sessions`.
+
+Then, modify `jhbuild-mesa-gnome.desktop` to set the proper path for
+the `jhbuild-mesa-gnome-session` executable and also modify this one
+to point to the proper paths for the JHBuild environment to use.
