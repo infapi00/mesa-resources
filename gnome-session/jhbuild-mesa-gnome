@@ -1,0 +1,7 @@
+#!/bin/bash
+
+export JHBUILD_MESA_ROOT="/opt/mesa"
+export MESA_RESOURCES="${JHBUILD_MESA_ROOT}/mesa-resources.git"
+env GL_DRIVER="i965" \
+    "${JHBUILD_MESA_ROOT}"/jhbuild-install/bin/jhbuild -f "${MESA_RESOURCES}"/jhbuild/jhbuildrc-basic run gnome-session --session jhbuild-mesa-gnome "$@"
+

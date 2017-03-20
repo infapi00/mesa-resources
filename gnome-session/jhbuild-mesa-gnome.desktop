@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=JHBuild Mesa GNOME
+Name[en_GB]=JHBuild Mesa GNOME
+Name[es]=JHBuild Mesa GNOME
+Name[fi]=JHBuild Mesa Gnome
+Comment=This session logs you into JHBuild Mesa GNOME
+Comment[en_GB]=This session logs you into JHBuild Mesa GNOME
+Comment[es]=Esta sesión accede a JHBuild Mesa GNOME
+Comment[fi]=Tämä istunto kirjautuu JHBuild Mesa Gnomeen
+Exec=/opt/mesa/bin/jhbuild-mesa-gnome
+TryExec=/opt/mesa/bin/jhbuild-mesa-gnome
+Icon=
+Type=Application
+DesktopNames=JHBuild-Mesa-GNOME;GNOME;

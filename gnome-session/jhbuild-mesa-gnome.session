@@ -1,0 +1,6 @@
+[GNOME Session]
+Name=JHBuild Mesa GNOME
+Name[en_GB]=JHBuild Mesa GNOME
+Name[es]=JHBuild Mesa GNOME
+Name[fi]=JHBuild Mesa Gnome
+RequiredComponents=org.gnome.Shell;gnome-settings-daemon;

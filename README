@@ -9,3 +9,7 @@ A brief description of what it contains:
    dependencies for working on mesa.
 
  * deqp: basic stuff for deqp.
+
+ * piglit: tools and scripts to use with piglit.
+
+ * gnome-session: tools to run GNOME with your desired GL driver
