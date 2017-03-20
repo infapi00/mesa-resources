@@ -1,0 +1,4 @@
+These scripts allow to do different actions against a GL driver with
+the test suites available. For example, you can just run all the tests
+on one or several tests suites or you can check for a regression based
+on a new recently failing test.
