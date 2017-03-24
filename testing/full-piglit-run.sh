@@ -34,7 +34,8 @@ DEQP_BUILD="${DEV_PATH}/android-deqp/external/deqp/"
 # Prefixes:
 # ---------
 
-VK_GL_CTS_PREFIX="VK-GL-CTS"
+VK_CTS_PREFIX="VK-CTS"
+GL_CTS_PREFIX="GL-CTS"
 DEQP_GLES2_PREFIX="DEQP2"
 DEQP_GLES3_PREFIX="DEQP3"
 DEQP_GLES31_PREFIX="DEQP31"
@@ -43,7 +44,8 @@ PIGLIT_PREFIX="all"
 # Reference run results:
 # ----------------------
 
-VK_GL_CTS_REFERENCE="${PIGLIT_REPORTS}/reference/${VK_GL_CTS_PREFIX}-20161118173616"
+VK_CTS_REFERENCE="${PIGLIT_REPORTS}/reference/${VK_CTS_PREFIX}-20161118173616"
+GL_CTS_REFERENCE="${PIGLIT_REPORTS}/reference/${GL_CTS_PREFIX}-20161118173616"
 DEQP_GLES2_REFERENCE="${PIGLIT_REPORTS}/reference/${DEQP_GLES2_PREFIX}-20160927194922"
 DEQP_GLES3_REFERENCE="${PIGLIT_REPORTS}/reference/${DEQP_GLES3_PREFIX}-20160927233138"
 DEQP_GLES31_REFERENCE="${PIGLIT_REPORTS}/reference/${DEQP_GLES31_PREFIX}-20160928061503"
@@ -52,7 +54,8 @@ PIGLIT_REFERENCE="${PIGLIT_REPORTS}/reference/${PIGLIT_PREFIX}-20160928132005"
 # What tests to run?
 # ------------------
 
-RUN_VK_GL_CTS=true
+RUN_VK_CTS=true
+RUN_GL_CTS=false
 RUN_DEQP_GLES2=false
 RUN_DEQP_GLES3=false
 RUN_DEQP_GLES31=false
@@ -69,74 +72,95 @@ CREATE_PIGLIT_REPORT=false
 
 TIMESTAMP=`date +%Y%m%d%H%M%S`
 
-VK_GL_CTS_NAME="${VK_GL_CTS_PREFIX}-${TIMESTAMP}"
+VK_CTS_NAME="${VK_CTS_PREFIX}-${TIMESTAMP}"
+GL_CTS_NAME="${GL_CTS_PREFIX}-${TIMESTAMP}"
 DEQP_GLES2_NAME="${DEQP_GLES2_PREFIX}-${TIMESTAMP}"
 DEQP_GLES3_NAME="${DEQP_GLES3_PREFIX}-${TIMESTAMP}"
 DEQP_GLES31_NAME="${DEQP_GLES31_PREFIX}-${TIMESTAMP}"
 PIGLIT_NAME="${PIGLIT_PREFIX}-${TIMESTAMP}"
 
-VK_GL_CTS_RESULTS="${PIGLIT_REPORTS}/results/${VK_GL_CTS_NAME}"
+VK_CTS_RESULTS="${PIGLIT_REPORTS}/results/${VK_CTS_NAME}"
+GL_CTS_RESULTS="${PIGLIT_REPORTS}/results/${GL_CTS_NAME}"
 DEQP_GLES2_RESULTS="${PIGLIT_REPORTS}/results/${DEQP_GLES2_NAME}"
 DEQP_GLES3_RESULTS="${PIGLIT_REPORTS}/results/${DEQP_GLES3_NAME}"
 DEQP_GLES31_RESULTS="${PIGLIT_REPORTS}/results/${DEQP_GLES31_NAME}"
 PIGLIT_RESULTS="${PIGLIT_REPORTS}/results/${PIGLIT_NAME}"
 
-VK_GL_CTS_SUMMARY="${PIGLIT_REPORTS}/summary/${VK_GL_CTS_NAME}"
+VK_CTS_SUMMARY="${PIGLIT_REPORTS}/summary/${VK_CTS_NAME}"
+GL_CTS_SUMMARY="${PIGLIT_REPORTS}/summary/${GL_CTS_NAME}"
 DEQP_GLES2_SUMMARY="${PIGLIT_REPORTS}/summary/${DEQP_GLES2_NAME}"
 DEQP_GLES3_SUMMARY="${PIGLIT_REPORTS}/summary/${DEQP_GLES3_NAME}"
 DEQP_GLES31_SUMMARY="${PIGLIT_REPORTS}/summary/${DEQP_GLES31_NAME}"
 PIGLIT_SUMMARY="${PIGLIT_REPORTS}/summary/${PIGLIT_NAME}"
 
-( ! ${RUN_VK_GL_CTS} \
+( ! ${RUN_VK_CTS} \
+    || ( echo PIGLIT_DEQP_VK_BIN="${VK_GL_CTS_BUILD}"/external/vulkancts/modules/vulkan/deqp-vk  \
+              PIGLIT_DEQP_VK_EXTRA_ARGS="--deqp-log-images=disable --deqp-log-shader-sources=disable" \
+             "${PIGLIT}"/piglit run deqp_vk -n "${VK_CTS_NAME}" "${VK_CTS_RESULTS}" \
+         && PIGLIT_DEQP_VK_BIN="${VK_GL_CTS_BUILD}"/external/vulkancts/modules/vulkan/deqp-vk \
+            PIGLIT_DEQP_VK_EXTRA_ARGS="--deqp-log-images=disable --deqp-log-shader-sources=disable" \
+            "${PIGLIT}"/piglit run deqp_vk -n "${VK_CTS_NAME}" "${VK_CTS_RESULTS}" \
+         && unset PIGLIT_DEQP_VK_BIN \
+         && unset PIGLIT_DEQP_VK_EXTRA_ARGS \
+         && ( ! ${CREATE_PIGLIT_REPORT} \
+                || "${PIGLIT}"/piglit summary html --overwrite "${PIGLIT_SUMMARY}" "${VK_CTS_REFERENCE}" "${PIGLIT_REPORTS}" ) ) ) \
+  && ( ! ${RUN_GL_CTS} \
     || ( echo PIGLIT_CTS_GL_BIN="${VK_GL_CTS_BUILD}"/external/openglcts/modules/glcts \
               PIGLIT_CTS_GL_EXTRA_ARGS="--deqp-case=GL45*" \
               MESA_GLES_VERSION_OVERRIDE=3.2 \
               MESA_GL_VERSION_OVERRIDE=4.5 \
               MESA_GLSL_VERSION_OVERRIDE=450 \
-             "${PIGLIT}"/piglit run cts_gl -t GL45 -n "${VK_GL_CTS_NAME}" "${VK_GL_CTS_RESULTS}" \
+             "${PIGLIT}"/piglit run cts_gl -t GL45 -n "${GL_CTS_NAME}" "${GL_CTS_RESULTS}" \
          && PIGLIT_CTS_GL_BIN="${VK_GL_CTS_BUILD}"/external/openglcts/modules/glcts \
             PIGLIT_CTS_GL_EXTRA_ARGS="--deqp-case=GL45*" \
             MESA_GLES_VERSION_OVERRIDE=3.2 \
             MESA_GL_VERSION_OVERRIDE=4.5 \
             MESA_GLSL_VERSION_OVERRIDE=450 \
-            "${PIGLIT}"/piglit run cts_gl -t GL45 -n "${VK_GL_CTS_NAME}" "${VK_GL_CTS_RESULTS}" \
+            "${PIGLIT}"/piglit run cts_gl -t GL45 -n "${GL_CTS_NAME}" "${GL_CTS_RESULTS}" \
          && unset PIGLIT_CTS_GL_BIN \
          && unset PIGLIT_CTS_GL_EXTRA_ARGS \
+         && unset MESA_GLES_VERSION_OVERRIDE \
          && unset MESA_GLSL_VERSION_OVERRIDE \
          && unset MESA_GLSL_VERSION_OVERRIDE \
          && ( ! ${CREATE_PIGLIT_REPORT} \
-                || "${PIGLIT}"/piglit summary html --overwrite "${PIGLIT_SUMMARY}" "${VK_GL_CTS_REFERENCE}" "${PIGLIT_REPORTS}" ) ) ) \
+                || "${PIGLIT}"/piglit summary html --overwrite "${PIGLIT_SUMMARY}" "${GL_CTS_REFERENCE}" "${PIGLIT_REPORTS}" ) ) ) \
   && ( ! ${RUN_DEQP_GLES2} \
     || ( echo PIGLIT_DEQP_GLES2_BIN="${DEQP_BUILD}"/modules/gles2/deqp-gles2 \
               PIGLIT_DEQP_GLES2_EXTRA_ARGS="--deqp-visibility hidden" \
+              MESA_GLES_VERSION_OVERRIDE=2.0 \
               "${PIGLIT}"/piglit run deqp_gles2 -t dEQP-GLES2 -n "${DEQP_GLES2_NAME}" "${DEQP_GLES2_RESULTS}" \
          && PIGLIT_DEQP_GLES2_BIN="${DEQP_BUILD}"/modules/gles2/deqp-gles2 \
             PIGLIT_DEQP_GLES2_EXTRA_ARGS="--deqp-visibility hidden" \
+            MESA_GLES_VERSION_OVERRIDE=2.0 \
             "${PIGLIT}"/piglit run deqp_gles2 -t dEQP-GLES2 -n "${DEQP_GLES2_NAME}" "${DEQP_GLES2_RESULTS}" \
          && unset PIGLIT_DEQP_GLES2_BIN \
          && unset PIGLIT_DEQP_GLES2_EXTRA_ARGS \
+         && unset MESA_GLES_VERSION_OVERRIDE \
          && ( ! ${CREATE_PIGLIT_REPORT} \
                 || "${PIGLIT}"/piglit summary html --overwrite "${DEQP_GLES2_SUMMARY}" "${DEQP_GLES2_REFERENCE}" "${DEQP_GLES2_RESULTS}" ) ) ) \
   && ( ! ${RUN_DEQP_GLES3} \
     || ( echo PIGLIT_DEQP_GLES3_EXE="${DEQP_BUILD}"/modules/gles3/deqp-gles3 \
               PIGLIT_DEQP_GLES3_EXTRA_ARGS="--deqp-visibility hidden" \
+              MESA_GLES_VERSION_OVERRIDE=3.0 \
               "${PIGLIT}"/piglit run deqp_gles3 -t dEQP-GLES3 -n "${DEQP_GLES3_NAME}" "${DEQP_GLES3_RESULTS}" \
          && PIGLIT_DEQP_GLES3_EXE="${DEQP_BUILD}"/modules/gles3/deqp-gles3 \
             PIGLIT_DEQP_GLES3_EXTRA_ARGS="--deqp-visibility hidden" \
+            MESA_GLES_VERSION_OVERRIDE=3.0 \
             "${PIGLIT}"/piglit run deqp_gles3 -t dEQP-GLES3 -n "${DEQP_GLES3_NAME}" "${DEQP_GLES3_RESULTS}" \
          && unset PIGLIT_DEQP_GLES3_EXE \
          && unset PIGLIT_DEQP_GLES3_EXTRA_ARGS \
+         && unset MESA_GLES_VERSION_OVERRIDE \
          && ( ! ${CREATE_PIGLIT_REPORT} \
                 || "${PIGLIT}"/piglit summary html --overwrite "${DEQP_GLES3_SUMMARY}" "${DEQP_GLES3_REFERENCE}" "${DEQP_GLES3_RESULTS}" ) ) ) \
   && ( ! ${RUN_DEQP_GLES31} \
-    || ( echo MESA_GLES_VERSION_OVERRIDE=3.1 \
-              PIGLIT_DEQP_GLES31_BIN="${DEQP_BUILD}"/modules/gles31/deqp-gles31 \
+    || ( echo PIGLIT_DEQP_GLES31_BIN="${DEQP_BUILD}"/modules/gles31/deqp-gles31 \
               PIGLIT_DEQP_GLES31_EXTRA_ARGS="--deqp-visibility hidden" \
+              MESA_GLES_VERSION_OVERRIDE=3.1 \
               "${PIGLIT}"/piglit run deqp_gles31 -t dEQP-GLES31 -n "${DEQP_GLES31_NAME}" "${DEQP_GLES31_RESULTS}" \
-         && MESA_GLES_VERSION_OVERRIDE=3.1 \
-            PIGLIT_DEQP_GLES31_BIN="${DEQP_BUILD}"/modules/gles31/deqp-gles31 \
+         && PIGLIT_DEQP_GLES31_BIN="${DEQP_BUILD}"/modules/gles31/deqp-gles31 \
             PIGLIT_DEQP_GLES31_EXTRA_ARGS="--deqp-visibility hidden" \
-            "${PIGLIT}"/piglit run deqp_gles31 -t dEQP-GLES31 -n "${DEQP_GLES31_NAME}" "${DEQP_GLES31_RESULTS}" \
+            MESA_GLES_VERSION_OVERRIDE=3.1 \
+	    "${PIGLIT}"/piglit run deqp_gles31 -t dEQP-GLES31 -n "${DEQP_GLES31_NAME}" "${DEQP_GLES31_RESULTS}" \
          && unset PIGLIT_DEQP_GLES31_BIN \
          && unset PIGLIT_DEQP_GLES31_EXTRA_ARGS \
          && unset MESA_GLES_VERSION_OVERRIDE \
