@@ -167,7 +167,8 @@ PIGLIT_SUMMARY="${PIGLIT_REPORTS}/summary/${PIGLIT_NAME}"
          && ( ! ${CREATE_PIGLIT_REPORT} \
                 || "${PIGLIT}"/piglit summary html --overwrite "${DEQP_GLES31_SUMMARY}" "${DEQP_GLES31_REFERENCE}" "${DEQP_GLES31_RESULTS}" ) ) ) \
   && ( ! ${RUN_PIGLIT} \
-    || "${PIGLIT}"/piglit run all -x texcombine -x texCombine -n all-"${PIGLIT_NAME}" "${PIGLIT_SUMMAR}Y" \
+    || echo "${PIGLIT}"/piglit run all -x texcombine -x texCombine -n "${PIGLIT_NAME}" "${PIGLIT_SUMMARY}" \
+       && "${PIGLIT}"/piglit run all -x texcombine -x texCombine -n "${PIGLIT_NAME}" "${PIGLIT_SUMMARY}" \
        && ( ! ${CREATE_PIGLIT_REPORT} \
               || "${PIGLIT}"/piglit summary html --overwrite "${PIGLIT_SUMMARY}" "${PIGLIT_REFERENCE}" "${PIGLIT_RESULTS}" ) )
 
@@ -178,4 +179,4 @@ exit $?
 # Reminder compilation line for VK-GL-CTS
 # ---------------------------------------
 
-# cmake .. -DCMAKE_C_FLAGS="-Werror -Wno-error=unused-command-line-argument -m64" -DCMAKE_CXX_FLAGS="-Werror -Wno-error=unused-command-line-argument -m64" -DCMAKE_C_COMPILER=clang-3.9 -DCMAKE_CXX_COMPILER=clang++-3.9 -DDEQP_TARGET=x11_egl -DGLCTS_GTF_TARGET=gles32 -DCMAKE_LIBRARY_PATH=/home/agomez/devel/graphics/install/lib/ -DCMAKE_INCLUDE_PATH=/home/agomez/devel/graphics/install/include/
+# cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-Werror -Wno-error=unused-command-line-argument -m64" -DCMAKE_CXX_FLAGS="-Werror -Wno-error=unused-command-line-argument -m64" -DCMAKE_C_COMPILER=clang-3.9 -DCMAKE_CXX_COMPILER=clang++-3.9 -DDEQP_TARGET=x11_egl -DGLCTS_GTF_TARGET=gles32 -DCMAKE_LIBRARY_PATH=/home/agomez/devel/graphics/install/lib/ -DCMAKE_INCLUDE_PATH=/home/agomez/devel/graphics/install/include/
