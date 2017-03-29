@@ -167,8 +167,8 @@ PIGLIT_SUMMARY="${PIGLIT_REPORTS}/summary/${PIGLIT_NAME}"
          && ( ! ${CREATE_PIGLIT_REPORT} \
                 || "${PIGLIT}"/piglit summary html --overwrite "${DEQP_GLES31_SUMMARY}" "${DEQP_GLES31_REFERENCE}" "${DEQP_GLES31_RESULTS}" ) ) ) \
   && ( ! ${RUN_PIGLIT} \
-    || echo "${PIGLIT}"/piglit run all -x texcombine -x texCombine -n "${PIGLIT_NAME}" "${PIGLIT_SUMMARY}" \
-       && "${PIGLIT}"/piglit run all -x texcombine -x texCombine -n "${PIGLIT_NAME}" "${PIGLIT_SUMMARY}" \
+    || echo "${PIGLIT}"/piglit run all -x texcombine -x texCombine -n "${PIGLIT_NAME}" "${PIGLIT_RESULTS}" \
+       && "${PIGLIT}"/piglit run all -x texcombine -x texCombine -n "${PIGLIT_NAME}" "${PIGLIT_RESULTS}" \
        && ( ! ${CREATE_PIGLIT_REPORT} \
               || "${PIGLIT}"/piglit summary html --overwrite "${PIGLIT_SUMMARY}" "${PIGLIT_REFERENCE}" "${PIGLIT_RESULTS}" ) )
 
