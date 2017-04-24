@@ -43,7 +43,7 @@
 #
 # Run:
 #
-# $ ./full-piglit-run.sh <driver> <mesa-commit-id>
+# $ FPR_RUN_PIGLIT=true ./full-piglit-run.sh <driver> <mesa-commit-id>
 
 usage()
 {
