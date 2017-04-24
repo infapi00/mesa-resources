@@ -130,7 +130,7 @@ FPR_CREATE_PIGLIT_REPORT="${FPR_CREATE_PIGLIT_REPORT:-false}"
 if ${FPR_RUN_VK_CTS} || ${FPR_RUN_GL_CTS}; then
     cd "${FPR_VK_GL_CTS_BUILD_PATH}"
     VK_GL_CTS_COMMIT=$(git show --pretty=format:"%h" --no-patch)
-    cd -
+    cd - > /dev/null
     if [ "x${VK_GL_CTS_COMMIT}" = "x" ]; then
 	printf "Couldn\'t get vk-gl-cts\'s commit ID\n"
 	exit -4
@@ -140,7 +140,7 @@ fi
 if ${FPR_RUN_DEQP_GLES2} || ${FPR_RUN_DEQP_GLES3} || ${FPR_RUN_DEQP_GLES31}; then
     cd "${FPR_DEQP_BUILD_PATH}"
     DEQP_COMMIT=$(git show --pretty=format:"%h" --no-patch)
-    cd -
+    cd - > /dev/null
     if [ "x${DEQP_COMMIT}" = "x" ]; then
 	printf "Couldn\'t get dEQP\'s commit ID\n"
 	exit -5
@@ -150,7 +150,7 @@ fi
 if ${FPR_RUN_PIGLIT}; then
     cd "${FPR_PIGLIT_PATH}"
     PIGLIT_COMMIT=$(git show --pretty=format:"%h" --no-patch)
-    cd -
+    cd - > /dev/null
     if [ "x${PIGLIT_COMMIT}" = "x" ]; then
 	printf "Couldn\'t get piglit\'s commit ID\n"
 	exit -6
