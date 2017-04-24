@@ -197,8 +197,11 @@ PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL
          && unset PIGLIT_DEQP_VK_BIN \
          && unset PIGLIT_DEQP_VK_EXTRA_ARGS \
          && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-                    || (  "${FPR_PIGLIT_PATH}"/piglit summary html --overwrite "${PIGLIT_SUMMARY}" "${VK_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}" \
-			       && "${FPR_PIGLIT_PATH}"/piglit summary console -d "${PIGLIT_SUMMARY}" "${VK_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}" ) ) ) ) \
+		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${PIGLIT_SUMMARY}" "${VK_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}") \
+				 && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
+				 && test "x${RESULTS[2]}" = "x0" ) \
+			     || ( echo "${SUMMARY}" \
+					&& "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "${PIGLIT_SUMMARY}" "${VK_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}" > /dev/null 2>&1 ) ) ) ) ) \
   && ( ! ${FPR_RUN_GL_CTS} \
     || ( echo PIGLIT_CTS_GL_BIN="${FPR_VK_GL_CTS_BUILD_PATH}"/external/openglcts/modules/glcts \
               PIGLIT_CTS_GL_EXTRA_ARGS="--deqp-case=GL45*" \
@@ -218,8 +221,11 @@ PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL
          && unset MESA_GLSL_VERSION_OVERRIDE \
          && unset MESA_GLSL_VERSION_OVERRIDE \
          && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-                    || ( "${FPR_PIGLIT_PATH}"/piglit summary html --overwrite "${PIGLIT_SUMMARY}" "${GL_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}" \
-			       && "${FPR_PIGLIT_PATH}"/piglit summary console -d "${PIGLIT_SUMMARY}" "${GL_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}" ) ) ) ) \
+		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${PIGLIT_SUMMARY}" "${GL_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}") \
+				 && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
+				 && test "x${RESULTS[2]}" = "x0" ) \
+			     || ( echo "${SUMMARY}" \
+					&& "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "${PIGLIT_SUMMARY}" "${GL_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}" > /dev/null 2>&1 ) ) ) ) ) \
   && ( ! ${FPR_RUN_DEQP_GLES2} \
     || ( echo PIGLIT_DEQP_GLES2_BIN="${FPR_DEQP_BUILD_PATH}"/modules/gles2/deqp-gles2 \
               PIGLIT_DEQP_GLES2_EXTRA_ARGS="--deqp-visibility hidden" \
@@ -233,8 +239,11 @@ PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL
          && unset PIGLIT_DEQP_GLES2_EXTRA_ARGS \
          && unset MESA_GLES_VERSION_OVERRIDE \
          && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-                    || ( "${FPR_PIGLIT_PATH}"/piglit summary html --overwrite "${DEQP_GLES2_SUMMARY}" "${DEQP_GLES2_REFERENCE}" "${DEQP_GLES2_RESULTS}" \
-			       && "${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES2_SUMMARY}" "${DEQP_GLES2_REFERENCE}" "${DEQP_GLES2_RESULTS}" ) ) ) ) \
+		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES2_SUMMARY}" "${DEQP_GLES2_REFERENCE}" "${DEQP_GLES2_RESULTS}") \
+				 && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
+				 && test "x${RESULTS[2]}" = "x0" ) \
+			     || ( echo "${SUMMARY}" \
+					&& "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "${DEQP_GLES2_SUMMARY}" "${DEQP_GLES2_REFERENCE}" "${DEQP_GLES2_RESULTS}" > /dev/null 2>&1 ) ) ) ) ) \
   && ( ! ${FPR_RUN_DEQP_GLES3} \
     || ( echo PIGLIT_DEQP_GLES3_EXE="${FPR_DEQP_BUILD_PATH}"/modules/gles3/deqp-gles3 \
               PIGLIT_DEQP_GLES3_EXTRA_ARGS="--deqp-visibility hidden" \
@@ -248,8 +257,11 @@ PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL
          && unset PIGLIT_DEQP_GLES3_EXTRA_ARGS \
          && unset MESA_GLES_VERSION_OVERRIDE \
          && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-                    || ( "${FPR_PIGLIT_PATH}"/piglit summary html --overwrite "${DEQP_GLES3_SUMMARY}" "${DEQP_GLES3_REFERENCE}" "${DEQP_GLES3_RESULTS}" \
-			       && "${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES3_SUMMARY}" "${DEQP_GLES3_REFERENCE}" "${DEQP_GLES3_RESULTS}" ) ) ) ) \
+		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES3_SUMMARY}" "${DEQP_GLES3_REFERENCE}" "${DEQP_GLES3_RESULTS}") \
+				 && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
+				 && test "x${RESULTS[2]}" = "x0" ) \
+			     || ( echo "${SUMMARY}" \
+					&& "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "${DEQP_GLES3_SUMMARY}" "${DEQP_GLES3_REFERENCE}" "${DEQP_GLES3_RESULTS}" > /dev/null 2>&1 ) ) ) ) ) \
   && ( ! ${FPR_RUN_DEQP_GLES31} \
     || ( echo PIGLIT_DEQP_GLES31_BIN="${FPR_DEQP_BUILD_PATH}"/modules/gles31/deqp-gles31 \
               PIGLIT_DEQP_GLES31_EXTRA_ARGS="--deqp-visibility hidden" \
@@ -263,14 +275,20 @@ PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL
          && unset PIGLIT_DEQP_GLES31_EXTRA_ARGS \
          && unset MESA_GLES_VERSION_OVERRIDE \
          && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-                    || ( "${FPR_PIGLIT_PATH}"/piglit summary html --overwrite "${DEQP_GLES31_SUMMARY}" "${DEQP_GLES31_REFERENCE}" "${DEQP_GLES31_RESULTS}" \
-			       && "${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES31_SUMMARY}" "${DEQP_GLES31_REFERENCE}" "${DEQP_GLES31_RESULTS}" ) ) ) ) \
+		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES31_SUMMARY}" "${DEQP_GLES31_REFERENCE}" "${DEQP_GLES31_RESULTS}") \
+				 && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
+				 && test "x${RESULTS[2]}" = "x0" ) \
+			     || ( echo "${SUMMARY}" \
+					&& "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "${DEQP_GLES31_SUMMARY}" "${DEQP_GLES31_REFERENCE}" "${DEQP_GLES31_RESULTS}" > /dev/null 2>&1 ) ) ) ) ) \
   && ( ! ${FPR_RUN_PIGLIT} \
     || ( echo "${FPR_PIGLIT_PATH}"/piglit run all -x texcombine -x texCombine -n "${PIGLIT_NAME}" "${PIGLIT_RESULTS}" \
 	       && "${FPR_PIGLIT_PATH}"/piglit run all -x texcombine -x texCombine -n "${PIGLIT_NAME}" "${PIGLIT_RESULTS}" \
 	       && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-			  || ( "${FPR_PIGLIT_PATH}"/piglit summary html --overwrite "${PIGLIT_SUMMARY}" "${PIGLIT_REFERENCE}" "${PIGLIT_RESULTS}" \
-				     && "${FPR_PIGLIT_PATH}"/piglit summary console -d "${PIGLIT_SUMMARY}" "${PIGLIT_REFERENCE}" "${PIGLIT_RESULTS}" ) ) ) )
+			  || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${PIGLIT_SUMMARY}" "${PIGLIT_REFERENCE}" "${PIGLIT_RESULTS}") \
+				       && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
+				       && test "x${RESULTS[2]}" = "x0" ) \
+				   || ( echo "${SUMMARY}" \
+					      && "${FPR_PIGLIT_PATH}"/piglit summary html -e pass -o "${PIGLIT_SUMMARY}" "${PIGLIT_REFERENCE}" "${PIGLIT_RESULTS}" > /dev/null 2>&1 ) ) ) ) )
 
 exit $?
 
