@@ -211,7 +211,8 @@ PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL
 		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${PIGLIT_SUMMARY}" "${VK_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}") \
 				 && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
 				 && test "x${RESULTS[2]}" = "x0" ) \
-			     || ( echo "${SUMMARY}" \
+			     || ( echo "${VK_CTS_NAME}" \
+					&& echo "${SUMMARY}" \
 					&& "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "${PIGLIT_SUMMARY}" "${VK_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}" > /dev/null 2>&1 ) ) ) ) ) \
   && ( ! ${FPR_RUN_GL_CTS} \
     || ( ( ! ${FPR_VERBOSE} \
@@ -236,7 +237,8 @@ PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL
 		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${PIGLIT_SUMMARY}" "${GL_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}") \
 				 && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
 				 && test "x${RESULTS[2]}" = "x0" ) \
-			     || ( echo "${SUMMARY}" \
+			     || ( echo "${GL_CTS_NAME}" \
+					&& echo "${SUMMARY}" \
 					&& "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "${PIGLIT_SUMMARY}" "${GL_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}" > /dev/null 2>&1 ) ) ) ) ) \
   && ( ! ${FPR_RUN_DEQP_GLES2} \
     || ( ( ! ${FPR_VERBOSE} \
@@ -255,7 +257,8 @@ PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL
 		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES2_SUMMARY}" "${DEQP_GLES2_REFERENCE}" "${DEQP_GLES2_RESULTS}") \
 				 && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
 				 && test "x${RESULTS[2]}" = "x0" ) \
-			     || ( echo "${SUMMARY}" \
+			     || ( echo "${DEQP_GLES2_NAME}" \
+					&& echo "${SUMMARY}" \
 					&& "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "${DEQP_GLES2_SUMMARY}" "${DEQP_GLES2_REFERENCE}" "${DEQP_GLES2_RESULTS}" > /dev/null 2>&1 ) ) ) ) ) \
   && ( ! ${FPR_RUN_DEQP_GLES3} \
     || ( ( ! ${FPR_VERBOSE} \
@@ -274,7 +277,8 @@ PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL
 		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES3_SUMMARY}" "${DEQP_GLES3_REFERENCE}" "${DEQP_GLES3_RESULTS}") \
 				 && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
 				 && test "x${RESULTS[2]}" = "x0" ) \
-			     || ( echo "${SUMMARY}" \
+			     || ( echo "${DEQP_GLES3_NAME}" \
+					&& echo "${SUMMARY}" \
 					&& "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "${DEQP_GLES3_SUMMARY}" "${DEQP_GLES3_REFERENCE}" "${DEQP_GLES3_RESULTS}" > /dev/null 2>&1 ) ) ) ) ) \
   && ( ! ${FPR_RUN_DEQP_GLES31} \
     || ( ( ! ${FPR_VERBOSE} \
@@ -293,7 +297,8 @@ PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL
 		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES31_SUMMARY}" "${DEQP_GLES31_REFERENCE}" "${DEQP_GLES31_RESULTS}") \
 				 && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
 				 && test "x${RESULTS[2]}" = "x0" ) \
-			     || ( echo "${SUMMARY}" \
+			     || ( echo "${DEQP_GLES31_NAME}" \
+					&& echo "${SUMMARY}" \
 					&& "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "${DEQP_GLES31_SUMMARY}" "${DEQP_GLES31_REFERENCE}" "${DEQP_GLES31_RESULTS}" > /dev/null 2>&1 ) ) ) ) ) \
   && ( ! ${FPR_RUN_PIGLIT} \
     || ( ( ! ${FPR_VERBOSE} \
@@ -303,7 +308,8 @@ PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL
 			  || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${PIGLIT_SUMMARY}" "${PIGLIT_REFERENCE}" "${PIGLIT_RESULTS}") \
 				       && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
 				       && test "x${RESULTS[2]}" = "x0" ) \
-				   || ( echo "${SUMMARY}" \
+				   || ( echo "${PIGLIT_NAME}" \
+					      && echo "${SUMMARY}" \
 					      && "${FPR_PIGLIT_PATH}"/piglit summary html -e pass -o "${PIGLIT_SUMMARY}" "${PIGLIT_REFERENCE}" "${PIGLIT_RESULTS}" > /dev/null 2>&1 ) ) ) ) )
 
 exit $?
