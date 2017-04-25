@@ -208,7 +208,7 @@ PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL
          && unset PIGLIT_DEQP_VK_BIN \
          && unset PIGLIT_DEQP_VK_EXTRA_ARGS \
          && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${PIGLIT_SUMMARY}" "${VK_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}") \
+		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${VK_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}") \
 				 && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
 				 && test "x${RESULTS[2]}" = "x0" ) \
 			     || ( echo "${VK_CTS_NAME}" \
@@ -234,7 +234,7 @@ PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL
          && unset MESA_GLSL_VERSION_OVERRIDE \
          && unset MESA_GLSL_VERSION_OVERRIDE \
          && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${PIGLIT_SUMMARY}" "${GL_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}") \
+		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${GL_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}") \
 				 && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
 				 && test "x${RESULTS[2]}" = "x0" ) \
 			     || ( echo "${GL_CTS_NAME}" \
@@ -254,7 +254,7 @@ PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL
          && unset PIGLIT_DEQP_GLES2_EXTRA_ARGS \
          && unset MESA_GLES_VERSION_OVERRIDE \
          && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES2_SUMMARY}" "${DEQP_GLES2_REFERENCE}" "${DEQP_GLES2_RESULTS}") \
+		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES2_REFERENCE}" "${DEQP_GLES2_RESULTS}") \
 				 && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
 				 && test "x${RESULTS[2]}" = "x0" ) \
 			     || ( echo "${DEQP_GLES2_NAME}" \
@@ -274,7 +274,7 @@ PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL
          && unset PIGLIT_DEQP_GLES3_EXTRA_ARGS \
          && unset MESA_GLES_VERSION_OVERRIDE \
          && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES3_SUMMARY}" "${DEQP_GLES3_REFERENCE}" "${DEQP_GLES3_RESULTS}") \
+		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES3_REFERENCE}" "${DEQP_GLES3_RESULTS}") \
 				 && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
 				 && test "x${RESULTS[2]}" = "x0" ) \
 			     || ( echo "${DEQP_GLES3_NAME}" \
@@ -294,7 +294,7 @@ PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL
          && unset PIGLIT_DEQP_GLES31_EXTRA_ARGS \
          && unset MESA_GLES_VERSION_OVERRIDE \
          && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES31_SUMMARY}" "${DEQP_GLES31_REFERENCE}" "${DEQP_GLES31_RESULTS}") \
+		    || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES31_REFERENCE}" "${DEQP_GLES31_RESULTS}") \
 				 && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
 				 && test "x${RESULTS[2]}" = "x0" ) \
 			     || ( echo "${DEQP_GLES31_NAME}" \
@@ -305,7 +305,7 @@ PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL
 	    || echo "${FPR_PIGLIT_PATH}"/piglit run ${PIGLIT_RUN_QUIET} all -x texcombine -x texCombine -n "${PIGLIT_NAME}" "${PIGLIT_RESULTS}" ) \
 	       && "${FPR_PIGLIT_PATH}"/piglit run ${PIGLIT_RUN_QUIET} all -x texcombine -x texCombine -n "${PIGLIT_NAME}" "${PIGLIT_RESULTS}" \
 	       && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-			  || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${PIGLIT_SUMMARY}" "${PIGLIT_REFERENCE}" "${PIGLIT_RESULTS}") \
+			  || ( ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${PIGLIT_REFERENCE}" "${PIGLIT_RESULTS}") \
 				       && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
 				       && test "x${RESULTS[2]}" = "x0" ) \
 				   || ( echo "${PIGLIT_NAME}" \
