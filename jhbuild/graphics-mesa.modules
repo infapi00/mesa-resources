@@ -86,7 +86,7 @@
     </dependencies>
   </autotools>
 
-  <autotools id="demos">
+  <autotools id="demos" autogenargs="--enable-egl --enable-gles1 --enable-gles2">
     <branch repo="mesa"/>
     <dependencies>
       <dep package="mesa"/>
