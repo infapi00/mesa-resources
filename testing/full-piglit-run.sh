@@ -3,99 +3,531 @@
 # This script uses piglit to run a whole test suite (VK-GL-CTS, dEQP,
 # piglit) against the currently installed GL driver.
 #
-# Follow the steps below to use:
-#
-# 1. If needed tweak the DISPLAY env variable.
-# 2. Set the paths to the piglit, vk-gl-cts and deqp builds or set the
-#    following env variables:
-#    * FPR_DEV_PATH
-#    * FPR_PIGLIT_PATH
-#    * FPR_PIGLIT_REPORTS_PATH
-#    * FPR_VK_GL_CTS_BUILD_PATH
-#    * FPR_DEQP_BUILD_PATH
-# 3. Choose the prefixes to use for each test suite or set the
-#    following env variables:
-#    * FPR_VK_CTS_PREFIX
-#    * FPR_GL_CTS_PREFIX
-#    * FPR_DEQP_GLES2_PREFIX
-#    * FPR_DEQP_GLES3_PREFIX
-#    * FPR_DEQP_GLES31_PREFIX
-#    * FPR_PIGLIT_PREFIX
-# 4. Choose which test suites to run or set to true at least one of
-#    the following env variables:
-#    * FPR_RUN_VK_CTS
-#    * FPR_RUN_GL_CTS
-#    * FPR_RUN_DEQP_GLES2
-#    * FPR_RUN_DEQP_GLES3
-#    * FPR_RUN_DEQP_GLES31
-#    * FPR_RUN_PIGLIT
-# 5. Optionally, set the following env variables:
-#    * FPR_VERBOSE
-#    * FPR_VK_CTS_REFERENCE_SUFFIX
-#    * FPR_GL_CTS_REFERENCE_SUFFIX
-#    * FPR_DEQP_GLES2_REFERENCE_SUFFIX
-#    * FPR_DEQP_GLES3_REFERENCE_SUFFIX
-#    * FPR_DEQP_GLES31_REFERENCE_SUFFIX
-#    * FPR_PIGLIT_REFERENCE_SUFFIX
-# 6. Whether to create or not a summary against the reference run or
-#    set to true/false the following env variable:
-#    * FPR_CREATE_PIGLIT_REPORT
-#
 # Run:
 #
-# $ FPR_RUN_PIGLIT=true ./full-piglit-run.sh <driver> <mesa-commit-id>
+# $ ./full-piglit-run.sh --run-piglit --driver <driver> --commit <mesa-commit-id>
 
-usage()
-{
-    echo -e "\e[31mUSAGE:"
-    echo -e "\e[31m$0 <driver> <mesa-commit-id>"
-    echo "            Driver:i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe"
-}
+export LC_ALL=C
 
-if ! [ $1 ]; then
-    usage
-    exit -1
-fi
-
-GL_DRIVER="${1}"
-shift
-
-if ! [ $1 ]; then
-    usage
-    exit -2
-fi
-
-MESA_COMMIT="${1}"
-shift
-
-case "x${GL_DRIVER}" in
-"xi965" | "xnouveau" | "xnvidia" | "xradeon" | "xamd" )
-    export -p GL_DRIVER
-    ;;
-"xllvmpipe" | "xswr" | "xsoftpipe" )
-    LIBGL_ALWAYS_SOFTWARE=1
-    GALLIUM_DRIVER=${GL_DRIVER}
-    export -p GL_DRIVER LIBGL_ALWAYS_SOFTWARE GALLIUM_DRIVER
-    ;;
-*)
-    usage
-    exit -3
-    ;;
-esac
-
-
-# SETTINGS
-# ========
+PATH=${HOME}/.local/bin$(echo :$PATH | sed -e s@:${HOME}/.local/bin@@g)
 
 DISPLAY="${DISPLAY:-:0.0}"
 export -p DISPLAY
+
+#------------------------------------------------------------------------------
+#			Function: check_driver
+#------------------------------------------------------------------------------
+#
+# perform sanity check on the passed GL driver to run:
+#   $1 - the intended GL driver to run
+# returns:
+#   0 is success, an error code otherwise
+check_driver() {
+    case "x$1" in
+	"xi965" | "xnouveau" | "xnvidia" | "xradeon" | "xamd"  | "xllvmpipe" | "xswr" | "xsoftpipe" )
+	    ;;
+	*)
+	    printf "\nA driver among [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe] has to be provided.\n"
+	    usage
+	    return 1
+	    ;;
+    esac
+
+    return 0
+}
+
+#------------------------------------------------------------------------------
+#			Function: check_option_args
+#------------------------------------------------------------------------------
+#
+# perform sanity checks on cmdline args which require arguments
+# arguments:
+#   $1 - the option being examined
+#   $2 - the argument to the option
+# returns:
+#   if it returns, everything is good
+#   otherwise it exit's
+check_option_args() {
+    option=$1
+    arg=$2
+
+    # check for an argument
+    if [ x"$arg" = x ]; then
+	printf "\nError: the '$option' option is missing its required argument.\n"
+	usage
+	exit 2
+    fi
+
+    # does the argument look like an option?
+    echo $arg | $FPR_GREP "^-" > /dev/null
+    if [ $? -eq 0 ]; then
+	printf "\nError: the argument '$arg' of option '$option' looks like an option itself.\n"
+	usage
+	exit 3
+    fi
+}
+
+#------------------------------------------------------------------------------
+#			Function: inner_run_tests
+#------------------------------------------------------------------------------
+#
+# performs the actual execution of the piglit tests
+# returns:
+#   0 is success, an error code otherwise
+function inner_run_tests {
+    printf "\n" >&"${FPR_OUTPUT}" 2>&1
+    test "x$FPR_INNER_RUN_MESSAGE" = "x" || printf "$FPR_INNER_RUN_MESSAGE " >&"${FPR_OUTPUT}" 2>&1
+    printf "$FPR_PIGLIT_PATH/piglit run $FPR_INNER_RUN_SET $FPR_INNER_RUN_PARAMETERS -n $FPR_INNER_RUN_NAME $FPR_INNER_RUN_RESULTS\n" >&"${FPR_OUTPUT}" 2>&1
+    $FPR_DRY_RUN && return 0
+    "$FPR_PIGLIT_PATH"/piglit run $FPR_INNER_RUN_SET $FPR_INNER_RUN_PARAMETERS -n "$FPR_INNER_RUN_NAME" "$FPR_INNER_RUN_RESULTS" >&"${FPR_OUTPUT}" 2>&1
+    if [ $? -ne 0 ]; then
+	return 9
+    fi
+    if $FPR_CREATE_PIGLIT_REPORT; then
+	printf "\n$FPR_PIGLIT_PATH/piglit summary console -d $FPR_INNER_RUN_REFERENCE $FPR_INNER_RUN_RESULTS\n" >&"${FPR_OUTPUT}" 2>&1
+	FPR_INNER_SUMMARY=$("$FPR_PIGLIT_PATH"/piglit summary console -d "$FPR_INNER_RUN_REFERENCE" "$FPR_INNER_RUN_RESULTS")
+	if [ $? -ne 0 ]; then
+	    return 10
+	fi
+	read -ra FPR_INNER_RESULTS <<< $(echo "$FPR_INNER_SUMMARY" | $FPR_GREP ^regressions)
+	if [ "x${FPR_INNER_RESULTS[2]}" != "x0" ]; then
+	    printf "\n%s\n" "Run name: $FPR_INNER_RUN_NAME" "$FPR_INNER_SUMMARY"
+	    printf "\nRegressions: ${FPR_INNER_RESULTS[2]}" >&"${FPR_OUTPUT}" 2>&1
+	    printf "\n${FPR_PIGLIT_PATH}/piglit summary html -o -e pass $FPR_INNER_RUN_SUMMARY $FPR_INNER_RUN_REFERENCE $FPR_INNER_RUN_RESULTS\n" >&"${FPR_OUTPUT}" 2>&1
+	    "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "$FPR_INNER_RUN_SUMMARY" "$FPR_INNER_RUN_REFERENCE" "$FPR_INNER_RUN_RESULTS" > /dev/null 2>&1
+	    if [ $? -ne 0 ]; then
+		return 11
+	    fi
+	fi
+    fi
+
+    return 0
+}
+
+#------------------------------------------------------------------------------
+#			Function: run_tests
+#------------------------------------------------------------------------------
+#
+# performs the execution of the piglit tests
+# returns:
+#   0 is success, an error code otherwise
+function run_tests {
+    if [ "${FPR_MESA_COMMIT:-x}" == "x" ]; then
+	printf "\nA commit id has to be provided.\n"
+	usage
+	return 4
+    fi
+
+    check_driver $FPR_GL_DRIVER
+    if [ $? -ne 0 ]; then
+	return 5
+    fi
+
+    case "x${FPR_GL_DRIVER}" in
+	"xllvmpipe" | "xswr" | "xsoftpipe" )
+	    LIBGL_ALWAYS_SOFTWARE=1
+	    GALLIUM_DRIVER=${FPR_GL_DRIVER}
+	    export -p LIBGL_ALWAYS_SOFTWARE GALLIUM_DRIVER
+	    ;;
+	*)
+	    ;;
+    esac
+
+    if ${FPR_RUN_VK_CTS} || ${FPR_RUN_GL_CTS}; then
+	cd "${FPR_VK_GL_CTS_BUILD_PATH}"
+	VK_GL_CTS_COMMIT=$(git show --pretty=format:"%h" --no-patch)
+	cd - > /dev/null
+	if [ "x${VK_GL_CTS_COMMIT}" = "x" ]; then
+	    printf "\nCouldn\'t get vk-gl-cts\'s commit ID\n"
+	    return 6
+	fi
+    fi
+
+    if ${FPR_RUN_DEQP_GLES2} || ${FPR_RUN_DEQP_GLES3} || ${FPR_RUN_DEQP_GLES31}; then
+	cd "${FPR_DEQP_BUILD_PATH}"
+	DEQP_COMMIT=$(git show --pretty=format:"%h" --no-patch)
+	cd - > /dev/null
+	if [ "x${DEQP_COMMIT}" = "x" ]; then
+	    printf "\nCouldn\'t get dEQP\'s commit ID\n"
+	    return 7
+	fi
+    fi
+
+    if ${FPR_RUN_PIGLIT}; then
+	cd "${FPR_PIGLIT_PATH}"
+	PIGLIT_COMMIT=$(git show --pretty=format:"%h" --no-patch)
+	cd - > /dev/null
+	if [ "x${PIGLIT_COMMIT}" = "x" ]; then
+	    printf "\nCouldn\'t get piglit\'s commit ID\n"
+	    return 8
+	fi
+    fi
+
+    TIMESTAMP=`date +%Y%m%d%H%M%S`
+
+    VK_CTS_NAME="${FPR_VK_CTS_PREFIX}-${FPR_GL_DRIVER}-${TIMESTAMP}-${VK_GL_CTS_COMMIT}-mesa-${FPR_MESA_COMMIT}"
+    GL_CTS_NAME="${FPR_GL_CTS_PREFIX}-${FPR_GL_DRIVER}-${TIMESTAMP}-${VK_GL_CTS_COMMIT}-mesa-${FPR_MESA_COMMIT}"
+    DEQP_GLES2_NAME="${FPR_DEQP_GLES2_PREFIX}-${FPR_GL_DRIVER}-${TIMESTAMP}-${DEQP_COMMIT}-mesa-${FPR_MESA_COMMIT}"
+    DEQP_GLES3_NAME="${FPR_DEQP_GLES3_PREFIX}-${FPR_GL_DRIVER}-${TIMESTAMP}-${DEQP_COMMIT}-mesa-${FPR_MESA_COMMIT}"
+    DEQP_GLES31_NAME="${FPR_DEQP_GLES31_PREFIX}-${FPR_GL_DRIVER}-${TIMESTAMP}-${DEQP_COMMIT}-mesa-${FPR_MESA_COMMIT}"
+    PIGLIT_NAME="${FPR_PIGLIT_PREFIX}-${FPR_GL_DRIVER}-${TIMESTAMP}-${PIGLIT_COMMIT}-mesa-${FPR_MESA_COMMIT}"
+
+    VK_CTS_RESULTS="${FPR_PIGLIT_RESULTS_PATH}/results/${VK_CTS_NAME}"
+    GL_CTS_RESULTS="${FPR_PIGLIT_RESULTS_PATH}/results/${GL_CTS_NAME}"
+    DEQP_GLES2_RESULTS="${FPR_PIGLIT_RESULTS_PATH}/results/${DEQP_GLES2_NAME}"
+    DEQP_GLES3_RESULTS="${FPR_PIGLIT_RESULTS_PATH}/results/${DEQP_GLES3_NAME}"
+    DEQP_GLES31_RESULTS="${FPR_PIGLIT_RESULTS_PATH}/results/${DEQP_GLES31_NAME}"
+    PIGLIT_RESULTS="${FPR_PIGLIT_RESULTS_PATH}/results/${PIGLIT_NAME}"
+
+    VK_CTS_SUMMARY="${FPR_PIGLIT_RESULTS_PATH}/summary/${VK_CTS_NAME}"
+    GL_CTS_SUMMARY="${FPR_PIGLIT_RESULTS_PATH}/summary/${GL_CTS_NAME}"
+    DEQP_GLES2_SUMMARY="${FPR_PIGLIT_RESULTS_PATH}/summary/${DEQP_GLES2_NAME}"
+    DEQP_GLES3_SUMMARY="${FPR_PIGLIT_RESULTS_PATH}/summary/${DEQP_GLES3_NAME}"
+    DEQP_GLES31_SUMMARY="${FPR_PIGLIT_RESULTS_PATH}/summary/${DEQP_GLES31_NAME}"
+    PIGLIT_SUMMARY="${FPR_PIGLIT_RESULTS_PATH}/summary/${PIGLIT_NAME}"
+
+    VK_CTS_REFERENCE="${FPR_PIGLIT_RESULTS_PATH}/reference/${FPR_VK_CTS_PREFIX}-${FPR_GL_DRIVER}${FPR_VK_CTS_REFERENCE_SUFFIX:+-}${FPR_VK_CTS_REFERENCE_SUFFIX}"
+    GL_CTS_REFERENCE="${FPR_PIGLIT_RESULTS_PATH}/reference/${FPR_GL_CTS_PREFIX}-${FPR_GL_DRIVER}${FPR_GL_CTS_REFERENCE_SUFFIX:+-}${FPR_GL_CTS_REFERENCE_SUFFIX}"
+    DEQP_GLES2_REFERENCE="${FPR_PIGLIT_RESULTS_PATH}/reference/${FPR_DEQP_GLES2_PREFIX}-${FPR_GL_DRIVER}${FPR_DEQP_GLES2_REFERENCE_SUFFIX:+-}${FPR_DEQP_GLES2_REFERENCE_SUFFIX}"
+    DEQP_GLES3_REFERENCE="${FPR_PIGLIT_RESULTS_PATH}/reference/${FPR_DEQP_GLES3_PREFIX}-${FPR_GL_DRIVER}${FPR_DEQP_GLES3_REFERENCE_SUFFIX:+-}${FPR_DEQP_GLES3_REFERENCE_SUFFIX}"
+    DEQP_GLES31_REFERENCE="${FPR_PIGLIT_RESULTS_PATH}/reference/${FPR_DEQP_GLES31_PREFIX}-${FPR_GL_DRIVER}${FPR_DEQP_GLES31_REFERENCE_SUFFIX:+-}${FPR_DEQP_GLES31_REFERENCE_SUFFIX}"
+    PIGLIT_REFERENCE="${FPR_PIGLIT_RESULTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${FPR_GL_DRIVER}${FPR_PIGLIT_REFERENCE_SUFFIX:+-}${FPR_PIGLIT_REFERENCE_SUFFIX}"
+
+    if $FPR_RUN_VK_CTS; then
+	export -p PIGLIT_DEQP_VK_BIN="$FPR_VK_GL_CTS_BUILD_PATH"/external/vulkancts/modules/vulkan/deqp-vk
+	export -p PIGLIT_DEQP_VK_EXTRA_ARGS="--deqp-log-images=disable --deqp-log-shader-sources=disable"
+	FPR_INNER_RUN_SET=deqp_vk
+	FPR_INNER_RUN_PARAMETERS=""
+	FPR_INNER_RUN_NAME=$VK_CTS_NAME
+	FPR_INNER_RUN_RESULTS=$VK_CTS_RESULTS
+	FPR_INNER_RUN_REFERENCE=$VK_CTS_REFERENCE
+	FPR_INNER_RUN_SUMMARY=$VK_CTS_SUMMARY
+	FPR_INNER_RUN_MESSAGE=" \
+			      PIGLIT_DEQP_VK_BIN=\"$PIGLIT_DEQP_VK_BIN\" \
+			      PIGLIT_DEQP_VK_EXTRA_ARGS=\"$PIGLIT_DEQP_VK_EXTRA_ARGS\""
+	inner_run_tests
+	if [ $? -ne 0 ]; then
+	    return $?
+	fi
+        unset PIGLIT_DEQP_VK_BIN
+        unset PIGLIT_DEQP_VK_EXTRA_ARGS
+    fi
+
+    if $FPR_RUN_GL_CTS; then
+	export -p PIGLIT_CTS_GL_BIN="${FPR_VK_GL_CTS_BUILD_PATH}"/external/openglcts/modules/glcts
+	export -p PIGLIT_CTS_GL_EXTRA_ARGS="--deqp-case=GL45*"
+	export -p MESA_GLES_VERSION_OVERRIDE=3.2
+	export -p MESA_GL_VERSION_OVERRIDE=4.5
+	export -p MESA_GLSL_VERSION_OVERRIDE=450
+	FPR_INNER_RUN_SET=cts_gl
+	FPR_INNER_RUN_PARAMETERS="-t GL45"
+	FPR_INNER_RUN_NAME=$GL_CTS_NAME
+	FPR_INNER_RUN_RESULTS=$GL_CTS_RESULTS
+	FPR_INNER_RUN_REFERENCE=$GL_CTS_REFERENCE
+	FPR_INNER_RUN_SUMMARY=$GL_CTS_SUMMARY
+	FPR_INNER_RUN_MESSAGE=" \
+			      PIGLIT_CTS_GL_BIN=\"$PIGLIT_CTS_GL_BIN\" \
+			      PIGLIT_CTS_GL_EXTRA_ARGS=\"$PIGLIT_CTS_GL_EXTRA_ARGS\" \
+			      MESA_GLES_VERSION_OVERRIDE=\"$MESA_GLES_VERSION_OVERRIDE\" \
+			      MESA_GL_VERSION_OVERRIDE=\"$MESA_GL_VERSION_OVERRIDE\" \
+			      MESA_GLSL_VERSION_OVERRIDE=\"$MESA_GLSL_VERSION_OVERRIDE\""
+	inner_run_tests
+	if [ $? -ne 0 ]; then
+	    return $?
+	fi
+        unset PIGLIT_CTS_GL_BIN
+        unset PIGLIT_CTS_GL_EXTRA_ARGS
+        unset MESA_GLES_VERSION_OVERRIDE
+        unset MESA_GLSL_VERSION_OVERRIDE
+        unset MESA_GLSL_VERSION_OVERRIDE
+    fi
+
+    if $FPR_RUN_DEQP_GLES2; then
+	export -p PIGLIT_DEQP_GLES2_BIN="${FPR_DEQP_BUILD_PATH}"/modules/gles2/deqp-gles2
+	export -p PIGLIT_DEQP_GLES2_EXTRA_ARGS="--deqp-visibility hidden"
+	export -p MESA_GLES_VERSION_OVERRIDE=2.0
+	FPR_INNER_RUN_SET=deqp_gles2
+	FPR_INNER_RUN_PARAMETERS="-t dEQP-GLES2"
+	FPR_INNER_RUN_NAME=$DEQP_GLES2_NAME
+	FPR_INNER_RUN_RESULTS=$DEQP_GLES2_RESULTS
+	FPR_INNER_RUN_REFERENCE=$DEQP_GLES2_REFERENCE
+	FPR_INNER_RUN_SUMMARY=$DEQP_GLES2_SUMMARY
+	FPR_INNER_RUN_MESSAGE=" \
+			      PIGLIT_DEQP_GLES2_BIN=\"$PIGLIT_DEQP_GLES2_BIN\" \
+			      PIGLIT_DEQP_GLES2_EXTRA_ARGS=\"$PIGLIT_DEQP_GLES2_EXTRA_ARGS\" \
+			      MESA_GLES_VERSION_OVERRIDE=\"$MESA_GLES_VERSION_OVERRIDE\""
+	inner_run_tests
+	if [ $? -ne 0 ]; then
+	    return $?
+	fi
+        unset PIGLIT_DEQP_GLES2_BIN
+        unset PIGLIT_DEQP_GLES2_EXTRA_ARGS
+        unset MESA_GLES_VERSION_OVERRIDE
+    fi
+
+    if $FPR_RUN_DEQP_GLES3; then
+	export -p PIGLIT_DEQP_GLES3_EXE="${FPR_DEQP_BUILD_PATH}"/modules/gles3/deqp-gles3
+	export -p PIGLIT_DEQP_GLES3_EXTRA_ARGS="--deqp-visibility hidden"
+	export -p MESA_GLES_VERSION_OVERRIDE=3.0
+	FPR_INNER_RUN_SET=deqp_gles3
+	FPR_INNER_RUN_PARAMETERS="-t dEQP-GLES3"
+	FPR_INNER_RUN_NAME=$DEQP_GLES3_NAME
+	FPR_INNER_RUN_RESULTS=$DEQP_GLES3_RESULTS
+	FPR_INNER_RUN_REFERENCE=$DEQP_GLES3_REFERENCE
+	FPR_INNER_RUN_SUMMARY=$DEQP_GLES3_SUMMARY
+	FPR_INNER_RUN_MESSAGE=" \
+			      PIGLIT_DEQP_GLES3_EXE=\"$PIGLIT_DEQP_GLES3_EXE\" \
+			      PIGLIT_DEQP_GLES3_EXTRA_ARGS=\"$PIGLIT_DEQP_GLES3_EXTRA_ARGS\" \
+			      MESA_GLES_VERSION_OVERRIDE=\"$MESA_GLES_VERSION_OVERRIDE\""
+	inner_run_tests
+	if [ $? -ne 0 ]; then
+	    return $?
+	fi
+        unset PIGLIT_DEQP_GLES3_EXE
+        unset PIGLIT_DEQP_GLES3_EXTRA_ARGS
+        unset MESA_GLES_VERSION_OVERRIDE
+    fi
+
+    if $FPR_RUN_DEQP_GLES31; then
+	export -p PIGLIT_DEQP_GLES31_BIN="${FPR_DEQP_BUILD_PATH}"/modules/gles31/deqp-gles31
+	export -p PIGLIT_DEQP_GLES31_EXTRA_ARGS="--deqp-visibility hidden"
+	export -p MESA_GLES_VERSION_OVERRIDE=3.1
+	FPR_INNER_RUN_SET=deqp_gles31
+	FPR_INNER_RUN_PARAMETERS="-t dEQP-GLES31"
+	FPR_INNER_RUN_NAME=$DEQP_GLES31_NAME
+	FPR_INNER_RUN_RESULTS=$DEQP_GLES31_RESULTS
+	FPR_INNER_RUN_REFERENCE=$DEQP_GLES31_REFERENCE
+	FPR_INNER_RUN_SUMMARY=$DEQP_GLES31_SUMMARY
+	FPR_INNER_RUN_MESSAGE=" \
+			      PIGLIT_DEQP_GLES31_BIN=\"$PIGLIT_DEQP_GLES31_BIN\" \
+			      PIGLIT_DEQP_GLES31_EXTRA_ARGS=\"$PIGLIT_DEQP_GLES31_EXTRA_ARGS\" \
+			      MESA_GLES_VERSION_OVERRIDE=\"$MESA_GLES_VERSION_OVERRIDE\""
+	inner_run_tests
+	if [ $? -ne 0 ]; then
+	    return $?
+	fi
+        unset PIGLIT_DEQP_GLES31_BIN
+        unset PIGLIT_DEQP_GLES31_EXTRA_ARGS
+        unset MESA_GLES_VERSION_OVERRIDE
+    fi
+
+    if $FPR_RUN_PIGLIT; then
+	FPR_INNER_RUN_SET=all
+	FPR_INNER_RUN_PARAMETERS="-x texcombine -x texCombine"
+	FPR_INNER_RUN_NAME=$PIGLIT_NAME
+	FPR_INNER_RUN_RESULTS=$PIGLIT_RESULTS
+	FPR_INNER_RUN_REFERENCE=$PIGLIT_REFERENCE
+	FPR_INNER_RUN_SUMMARY=$PIGLIT_SUMMARY
+	FPR_INNER_RUN_MESSAGE=""
+	inner_run_tests
+	if [ $? -ne 0 ]; then
+	    return $?
+	fi
+    fi
+}
+
+#------------------------------------------------------------------------------
+#			Function: usage
+#------------------------------------------------------------------------------
+# Displays the script usage and exits successfully
+#
+usage() {
+    basename="`expr "//$0" : '.*/\([^/]*\)'`"
+    cat <<HELP
+
+Usage: $basename [options] --driver [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe] --commit <mesa-commit-id>
+
+Options:
+  --dry-run               Does everything except running the tests
+  --verbose               Be verbose
+  --help                  Display this help and exit successfully
+  --driver                Which driver with which to run the tests [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe]
+  --commit                Mesa commit to output
+  --base-path             PATH from which to create the rest of the relative paths
+  --piglit-path           PATH to the built piglit binaries
+  --piglit-results-path   PATH to the piglit results
+  --vk-gl-cts-path        PATH to the built vk-gl-cts binaries
+  --deqp-path             PATH to the built dEQP binaries
+  --vk-cts-prefix         Prefix to use with the vk-cts run
+  --gl-cts-prefix         Prefix to use with the gl-cts run
+  --deqp-gles2-prefix     Prefix to use with the dEQP GLES2 run
+  --deqp-gles3-prefix     Prefix to use with the dEQP GLES3 run
+  --deqp-gles31-prefix    Prefix to use with the dEQP GLES3.1 run
+  --piglit-prefix         Prefix to use with the piglit run
+  --run-vk-cts            Run vk-cts
+  --run-gl-cts            Run gl-cts
+  --run-deqp-gles2-cts    Run dEQP GLES2
+  --run-deqp-gles3-cts    Run dEQP GLES3
+  --run-deqp-gles31-cts   Run dEQP GLES31
+  --run-piglit            Run piglit
+  --create-piglit-report  Create results report
+
+HELP
+}
+
+#------------------------------------------------------------------------------
+#			Script main line
+#------------------------------------------------------------------------------
+#
+
+# Choose which grep program to use (on Solaris, must be gnu grep)
+if [ "x$FPR_GREP" = "x" ] ; then
+    if [ -x /usr/gnu/bin/grep ] ; then
+	FPR_GREP=/usr/gnu/bin/grep
+    else
+	FPR_GREP=grep
+    fi
+fi
+
+# Process command line args
+while [ $# != 0 ]
+do
+    case $1 in
+    # Does everything except running the tests
+    --dry-run)
+	FPR_DRY_RUN=true
+	;;
+    # Be verbose
+    --verbose)
+	FPR_VERBOSE=true
+	;;
+    # Display this help and exit successfully
+    --help)
+	usage
+	exit 0
+	;;
+    # Which driver with which to run the tests [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe]
+    --driver)
+	check_option_args $1 $2
+	shift
+	FPR_GL_DRIVER=$1
+	;;
+    # Mesa commit to output
+    --commit)
+	check_option_args $1 $2
+	shift
+	FPR_MESA_COMMIT=$1
+	;;
+    # PATH from which to create the rest of the relative paths
+    --base-path)
+	check_option_args $1 $2
+	shift
+	FPR_DEV_PATH=$1
+	;;
+    # PATH to the built piglit binaries
+    --piglit-path)
+	check_option_args $1 $2
+	shift
+	FPR_PIGLIT_PATH=$1
+	;;
+    # PATH to the piglit results
+    --piglit-results-path)
+	check_option_args $1 $2
+	shift
+	FPR_PIGLIT_RESULTS_PATH=$1
+	;;
+    # PATH to the built vk-gl-cts binaries
+    --vk-gl-cts-path)
+	check_option_args $1 $2
+	shift
+	FPR_VK_GL_CTS_BUILD_PATH=$1
+	;;
+    # PATH to the built dEQP binaries
+    --deqp-path)
+	check_option_args $1 $2
+	shift
+	FPR_DEQP_BUILD_PATH=$1
+	;;
+    # Prefix to use with the vk-cts run
+    --vk-cts-prefix)
+	check_option_args $1 $2
+	shift
+	FPR_VK_CTS_PREFIX=$1
+	;;
+    # Prefix to use with the gl-cts run
+    --gl-cts-prefix)
+	check_option_args $1 $2
+	shift
+	FPR_GL_CTS_PREFIX=$1
+	;;
+    # Prefix to use with the dEQP GLES2 run
+    --deqp-gles2-prefix)
+	check_option_args $1 $2
+	shift
+	FPR_DEQP_GLES2_PREFIX=$1
+	;;
+    # Prefix to use with the dEQP GLES3 run
+    --deqp-gles3-prefix)
+	check_option_args $1 $2
+	shift
+	FPR_DEQP_GLES3_PREFIX=$1
+	;;
+    # Prefix to use with the dEQP GLES3.1 run
+    --deqp-gles31-prefix)
+	check_option_args $1 $2
+	shift
+	FPR_DEQP_GLES31_PREFIX=$1
+	;;
+    # Prefix to use with the piglit run
+    --piglit-prefix)
+	check_option_args $1 $2
+	shift
+	FPR_PIGLIT_PREFIX=$1
+	;;
+    # Run vk-cts
+    --run-vk-cts)
+	FPR_RUN_VK_CTS=true
+	;;
+    # Run gl-cts
+    --run-gl-cts)
+	FPR_RUN_GL_CTS=true
+	;;
+    # Run dEQP GLES2
+    --run-deqp-gles2-cts)
+	FPR_RUN_DEQP_GLES2=true
+	;;
+    # Run dEQP GLES3
+    --run-deqp-gles3-cts)
+	FPR_RUN_DEQP_GLES3=true
+	;;
+    # Run dEQP GLES31
+    --run-deqp-gles31-cts)
+	FPR_RUN_DEQP_GLES31=true
+	;;
+    # Run piglit
+    --run-piglit)
+	FPR_RUN_PIGLIT=true
+	;;
+    # Create results report
+    --create-piglit-report)
+	FPR_CREATE_PIGLIT_REPORT=true
+	;;
+    --*)
+	printf "\nError: unknown option: $1.\n"
+	usage
+	exit 1
+	;;
+    -*)
+	printf "\nError: unknown option: $1.\n"
+	usage
+	exit 1
+	;;
+    *)
+	printf "\nError: unknown extra parameter: $1.\n"
+	usage
+	exit 1
+	;;
+    esac
+
+    shift
+done
 
 # Paths ...
 # ---------
 
 FPR_DEV_PATH="${FPR_DEV_PATH:-/home/guest/agomez/jhbuild}"
 FPR_PIGLIT_PATH="${FPR_PIGLIT_PATH:-${FPR_DEV_PATH}/piglit.git}"
-FPR_PIGLIT_REPORTS_PATH="${FPR_PIGLIT_REPORTS_PATH:-${FPR_DEV_PATH}/piglit-results}"
+FPR_PIGLIT_RESULTS_PATH="${FPR_PIGLIT_RESULTS_PATH:-${FPR_DEV_PATH}/piglit-results}"
 FPR_VK_GL_CTS_BUILD_PATH="${FPR_VK_GL_CTS_BUILD_PATH:-${FPR_DEV_PATH}/vk-gl-cts.git/build}"
 FPR_DEQP_BUILD_PATH="${FPR_DEQP_BUILD_PATH:-${FPR_DEV_PATH}/android-deqp/external/deqp/}"
 
@@ -124,44 +556,15 @@ FPR_RUN_PIGLIT="${FPR_RUN_PIGLIT:-false}"
 
 FPR_VERBOSE="${FPR_VERBOSE:-false}"
 
+# dry run?
+# --------
+
+FPR_DRY_RUN="${FPR_DRY_RUN:-false}"
+
 # Create a report against the reference result?
 # ---------------------------------------------
 
 FPR_CREATE_PIGLIT_REPORT="${FPR_CREATE_PIGLIT_REPORT:-false}"
-
-
-# RUNNING
-# =======
-
-if ${FPR_RUN_VK_CTS} || ${FPR_RUN_GL_CTS}; then
-    cd "${FPR_VK_GL_CTS_BUILD_PATH}"
-    VK_GL_CTS_COMMIT=$(git show --pretty=format:"%h" --no-patch)
-    cd - > /dev/null
-    if [ "x${VK_GL_CTS_COMMIT}" = "x" ]; then
-	printf "Couldn\'t get vk-gl-cts\'s commit ID\n"
-	exit -4
-    fi
-fi
-
-if ${FPR_RUN_DEQP_GLES2} || ${FPR_RUN_DEQP_GLES3} || ${FPR_RUN_DEQP_GLES31}; then
-    cd "${FPR_DEQP_BUILD_PATH}"
-    DEQP_COMMIT=$(git show --pretty=format:"%h" --no-patch)
-    cd - > /dev/null
-    if [ "x${DEQP_COMMIT}" = "x" ]; then
-	printf "Couldn\'t get dEQP\'s commit ID\n"
-	exit -5
-    fi
-fi
-
-if ${FPR_RUN_PIGLIT}; then
-    cd "${FPR_PIGLIT_PATH}"
-    PIGLIT_COMMIT=$(git show --pretty=format:"%h" --no-patch)
-    cd - > /dev/null
-    if [ "x${PIGLIT_COMMIT}" = "x" ]; then
-	printf "Couldn\'t get piglit\'s commit ID\n"
-	exit -6
-    fi
-fi
 
 if ${FPR_VERBOSE}; then
     FPR_OUTPUT=1
@@ -169,150 +572,6 @@ else
     FPR_OUTPUT=/dev/null
 fi
 
-TIMESTAMP=`date +%Y%m%d%H%M%S`
-
-VK_CTS_NAME="${FPR_VK_CTS_PREFIX}-${GL_DRIVER}-${TIMESTAMP}-${VK_GL_CTS_COMMIT}-mesa-${MESA_COMMIT}"
-GL_CTS_NAME="${FPR_GL_CTS_PREFIX}-${GL_DRIVER}-${TIMESTAMP}-${VK_GL_CTS_COMMIT}-mesa-${MESA_COMMIT}"
-DEQP_GLES2_NAME="${FPR_DEQP_GLES2_PREFIX}-${GL_DRIVER}-${TIMESTAMP}-${DEQP_COMMIT}-mesa-${MESA_COMMIT}"
-DEQP_GLES3_NAME="${FPR_DEQP_GLES3_PREFIX}-${GL_DRIVER}-${TIMESTAMP}-${DEQP_COMMIT}-mesa-${MESA_COMMIT}"
-DEQP_GLES31_NAME="${FPR_DEQP_GLES31_PREFIX}-${GL_DRIVER}-${TIMESTAMP}-${DEQP_COMMIT}-mesa-${MESA_COMMIT}"
-PIGLIT_NAME="${FPR_PIGLIT_PREFIX}-${GL_DRIVER}-${TIMESTAMP}-${PIGLIT_COMMIT}-mesa-${MESA_COMMIT}"
-
-VK_CTS_RESULTS="${FPR_PIGLIT_REPORTS_PATH}/results/${VK_CTS_NAME}"
-GL_CTS_RESULTS="${FPR_PIGLIT_REPORTS_PATH}/results/${GL_CTS_NAME}"
-DEQP_GLES2_RESULTS="${FPR_PIGLIT_REPORTS_PATH}/results/${DEQP_GLES2_NAME}"
-DEQP_GLES3_RESULTS="${FPR_PIGLIT_REPORTS_PATH}/results/${DEQP_GLES3_NAME}"
-DEQP_GLES31_RESULTS="${FPR_PIGLIT_REPORTS_PATH}/results/${DEQP_GLES31_NAME}"
-PIGLIT_RESULTS="${FPR_PIGLIT_REPORTS_PATH}/results/${PIGLIT_NAME}"
-
-VK_CTS_SUMMARY="${FPR_PIGLIT_REPORTS_PATH}/summary/${VK_CTS_NAME}"
-GL_CTS_SUMMARY="${FPR_PIGLIT_REPORTS_PATH}/summary/${GL_CTS_NAME}"
-DEQP_GLES2_SUMMARY="${FPR_PIGLIT_REPORTS_PATH}/summary/${DEQP_GLES2_NAME}"
-DEQP_GLES3_SUMMARY="${FPR_PIGLIT_REPORTS_PATH}/summary/${DEQP_GLES3_NAME}"
-DEQP_GLES31_SUMMARY="${FPR_PIGLIT_REPORTS_PATH}/summary/${DEQP_GLES31_NAME}"
-PIGLIT_SUMMARY="${FPR_PIGLIT_REPORTS_PATH}/summary/${PIGLIT_NAME}"
-
-VK_CTS_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_VK_CTS_PREFIX}-${GL_DRIVER}${FPR_VK_CTS_REFERENCE_SUFFIX:+-}${FPR_VK_CTS_REFERENCE_SUFFIX}"
-GL_CTS_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_GL_CTS_PREFIX}-${GL_DRIVER}${FPR_GL_CTS_REFERENCE_SUFFIX:+-}${FPR_GL_CTS_REFERENCE_SUFFIX}"
-DEQP_GLES2_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_DEQP_GLES2_PREFIX}-${GL_DRIVER}${FPR_DEQP_GLES2_REFERENCE_SUFFIX:+-}${FPR_DEQP_GLES2_REFERENCE_SUFFIX}"
-DEQP_GLES3_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_DEQP_GLES3_PREFIX}-${GL_DRIVER}${FPR_DEQP_GLES3_REFERENCE_SUFFIX:+-}${FPR_DEQP_GLES3_REFERENCE_SUFFIX}"
-DEQP_GLES31_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_DEQP_GLES31_PREFIX}-${GL_DRIVER}${FPR_DEQP_GLES31_REFERENCE_SUFFIX:+-}${FPR_DEQP_GLES31_REFERENCE_SUFFIX}"
-PIGLIT_REFERENCE="${FPR_PIGLIT_REPORTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${GL_DRIVER}${FPR_PIGLIT_REFERENCE_SUFFIX:+-}${FPR_PIGLIT_REFERENCE_SUFFIX}"
-
-( ! ${FPR_RUN_VK_CTS} \
-    || ( echo PIGLIT_DEQP_VK_BIN="${FPR_VK_GL_CTS_BUILD_PATH}"/external/vulkancts/modules/vulkan/deqp-vk  \
-	      PIGLIT_DEQP_VK_EXTRA_ARGS="--deqp-log-images=disable --deqp-log-shader-sources=disable" \
-	      "${FPR_PIGLIT_PATH}"/piglit run deqp_vk -n "${VK_CTS_NAME}" "${VK_CTS_RESULTS}" >&"${FPR_OUTPUT}" 2>&1 \
-         && PIGLIT_DEQP_VK_BIN="${FPR_VK_GL_CTS_BUILD_PATH}"/external/vulkancts/modules/vulkan/deqp-vk \
-            PIGLIT_DEQP_VK_EXTRA_ARGS="--deqp-log-images=disable --deqp-log-shader-sources=disable" \
-            "${FPR_PIGLIT_PATH}"/piglit run deqp_vk -n "${VK_CTS_NAME}" "${VK_CTS_RESULTS}" >&"${FPR_OUTPUT}" 2>&1 \
-         && unset PIGLIT_DEQP_VK_BIN \
-         && unset PIGLIT_DEQP_VK_EXTRA_ARGS \
-         && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-		    || ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${VK_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}") \
-			       && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
-			       && ( test "x${RESULTS[2]}" = "x0" \
-					  || ( echo "${VK_CTS_NAME}" \
-						     && echo "${SUMMARY}" \
-						     && "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "${PIGLIT_SUMMARY}" "${VK_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}" > /dev/null 2>&1 ) ) ) ) ) ) \
-  && ( ! ${FPR_RUN_GL_CTS} \
-    || ( echo PIGLIT_CTS_GL_BIN="${FPR_VK_GL_CTS_BUILD_PATH}"/external/openglcts/modules/glcts \
-	      PIGLIT_CTS_GL_EXTRA_ARGS="--deqp-case=GL45*" \
-	      MESA_GLES_VERSION_OVERRIDE=3.2 \
-	      MESA_GL_VERSION_OVERRIDE=4.5 \
-	      MESA_GLSL_VERSION_OVERRIDE=450 \
-	      "${FPR_PIGLIT_PATH}"/piglit run cts_gl -t GL45 -n "${GL_CTS_NAME}" "${GL_CTS_RESULTS}" >&"${FPR_OUTPUT}" 2>&1 \
-         && PIGLIT_CTS_GL_BIN="${FPR_VK_GL_CTS_BUILD_PATH}"/external/openglcts/modules/glcts \
-            PIGLIT_CTS_GL_EXTRA_ARGS="--deqp-case=GL45*" \
-            MESA_GLES_VERSION_OVERRIDE=3.2 \
-            MESA_GL_VERSION_OVERRIDE=4.5 \
-            MESA_GLSL_VERSION_OVERRIDE=450 \
-            "${FPR_PIGLIT_PATH}"/piglit run cts_gl -t GL45 -n "${GL_CTS_NAME}" "${GL_CTS_RESULTS}" >&"${FPR_OUTPUT}" 2>&1 \
-         && unset PIGLIT_CTS_GL_BIN \
-         && unset PIGLIT_CTS_GL_EXTRA_ARGS \
-         && unset MESA_GLES_VERSION_OVERRIDE \
-         && unset MESA_GLSL_VERSION_OVERRIDE \
-         && unset MESA_GLSL_VERSION_OVERRIDE \
-         && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-		    || ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${GL_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}") \
-			       && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
-			       && ( test "x${RESULTS[2]}" = "x0" \
-					  || ( echo "${GL_CTS_NAME}" \
-						     && echo "${SUMMARY}" \
-						     && "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "${PIGLIT_SUMMARY}" "${GL_CTS_REFERENCE}" "${FPR_PIGLIT_REPORTS_PATH}" > /dev/null 2>&1 ) ) ) ) ) ) \
-  && ( ! ${FPR_RUN_DEQP_GLES2} \
-    || ( echo PIGLIT_DEQP_GLES2_BIN="${FPR_DEQP_BUILD_PATH}"/modules/gles2/deqp-gles2 \
-	      PIGLIT_DEQP_GLES2_EXTRA_ARGS="--deqp-visibility hidden" \
-	      MESA_GLES_VERSION_OVERRIDE=2.0 \
-	      "${FPR_PIGLIT_PATH}"/piglit run deqp_gles2 -t dEQP-GLES2 -n "${DEQP_GLES2_NAME}" "${DEQP_GLES2_RESULTS}" >&"${FPR_OUTPUT}" 2>&1 \
-         && PIGLIT_DEQP_GLES2_BIN="${FPR_DEQP_BUILD_PATH}"/modules/gles2/deqp-gles2 \
-            PIGLIT_DEQP_GLES2_EXTRA_ARGS="--deqp-visibility hidden" \
-            MESA_GLES_VERSION_OVERRIDE=2.0 \
-            "${FPR_PIGLIT_PATH}"/piglit run deqp_gles2 -t dEQP-GLES2 -n "${DEQP_GLES2_NAME}" "${DEQP_GLES2_RESULTS}" >&"${FPR_OUTPUT}" 2>&1 \
-         && unset PIGLIT_DEQP_GLES2_BIN \
-         && unset PIGLIT_DEQP_GLES2_EXTRA_ARGS \
-         && unset MESA_GLES_VERSION_OVERRIDE \
-         && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-		    || ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES2_REFERENCE}" "${DEQP_GLES2_RESULTS}") \
-			       && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
-			       && ( test "x${RESULTS[2]}" = "x0" \
-					  || ( echo "${DEQP_GLES2_NAME}" \
-						     && echo "${SUMMARY}" \
-						     && "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "${DEQP_GLES2_SUMMARY}" "${DEQP_GLES2_REFERENCE}" "${DEQP_GLES2_RESULTS}" > /dev/null 2>&1 ) ) ) ) ) ) \
-  && ( ! ${FPR_RUN_DEQP_GLES3} \
-    || ( echo PIGLIT_DEQP_GLES3_EXE="${FPR_DEQP_BUILD_PATH}"/modules/gles3/deqp-gles3 \
-	      PIGLIT_DEQP_GLES3_EXTRA_ARGS="--deqp-visibility hidden" \
-	      MESA_GLES_VERSION_OVERRIDE=3.0 \
-	      "${FPR_PIGLIT_PATH}"/piglit run deqp_gles3 -t dEQP-GLES3 -n "${DEQP_GLES3_NAME}" "${DEQP_GLES3_RESULTS}" >&"${FPR_OUTPUT}" 2>&1 \
-         && PIGLIT_DEQP_GLES3_EXE="${FPR_DEQP_BUILD_PATH}"/modules/gles3/deqp-gles3 \
-            PIGLIT_DEQP_GLES3_EXTRA_ARGS="--deqp-visibility hidden" \
-            MESA_GLES_VERSION_OVERRIDE=3.0 \
-            "${FPR_PIGLIT_PATH}"/piglit run deqp_gles3 -t dEQP-GLES3 -n "${DEQP_GLES3_NAME}" "${DEQP_GLES3_RESULTS}" >&"${FPR_OUTPUT}" 2>&1 \
-         && unset PIGLIT_DEQP_GLES3_EXE \
-         && unset PIGLIT_DEQP_GLES3_EXTRA_ARGS \
-         && unset MESA_GLES_VERSION_OVERRIDE \
-         && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-		    || ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES3_REFERENCE}" "${DEQP_GLES3_RESULTS}") \
-			       && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
-			       && ( test "x${RESULTS[2]}" = "x0" \
-					  || ( echo "${DEQP_GLES3_NAME}" \
-						     && echo "${SUMMARY}" \
-						     && "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "${DEQP_GLES3_SUMMARY}" "${DEQP_GLES3_REFERENCE}" "${DEQP_GLES3_RESULTS}" > /dev/null 2>&1 ) ) ) ) ) ) \
-  && ( ! ${FPR_RUN_DEQP_GLES31} \
-    || ( echo PIGLIT_DEQP_GLES31_BIN="${FPR_DEQP_BUILD_PATH}"/modules/gles31/deqp-gles31 \
-	      PIGLIT_DEQP_GLES31_EXTRA_ARGS="--deqp-visibility hidden" \
-	      MESA_GLES_VERSION_OVERRIDE=3.1 \
-	      "${FPR_PIGLIT_PATH}"/piglit run deqp_gles31 -t dEQP-GLES31 -n "${DEQP_GLES31_NAME}" "${DEQP_GLES31_RESULTS}" >&"${FPR_OUTPUT}" 2>&1 \
-         && PIGLIT_DEQP_GLES31_BIN="${FPR_DEQP_BUILD_PATH}"/modules/gles31/deqp-gles31 \
-            PIGLIT_DEQP_GLES31_EXTRA_ARGS="--deqp-visibility hidden" \
-            MESA_GLES_VERSION_OVERRIDE=3.1 \
-	    "${FPR_PIGLIT_PATH}"/piglit run deqp_gles31 -t dEQP-GLES31 -n "${DEQP_GLES31_NAME}" "${DEQP_GLES31_RESULTS}" >&"${FPR_OUTPUT}" 2>&1 \
-         && unset PIGLIT_DEQP_GLES31_BIN \
-         && unset PIGLIT_DEQP_GLES31_EXTRA_ARGS \
-         && unset MESA_GLES_VERSION_OVERRIDE \
-         && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-		    || ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${DEQP_GLES31_REFERENCE}" "${DEQP_GLES31_RESULTS}") \
-			       && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
-			       && ( test "x${RESULTS[2]}" = "x0" \
-					  || ( echo "${DEQP_GLES31_NAME}" \
-						     && echo "${SUMMARY}" \
-						     && "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "${DEQP_GLES31_SUMMARY}" "${DEQP_GLES31_REFERENCE}" "${DEQP_GLES31_RESULTS}" > /dev/null 2>&1 ) ) ) ) ) ) \
-  && ( ! ${FPR_RUN_PIGLIT} \
-    || ( echo "${FPR_PIGLIT_PATH}"/piglit run all -x texcombine -x texCombine -n "${PIGLIT_NAME}" "${PIGLIT_RESULTS}" >&"${FPR_OUTPUT}" 2>&1 \
-	     && "${FPR_PIGLIT_PATH}"/piglit run all -x texcombine -x texCombine -n "${PIGLIT_NAME}" "${PIGLIT_RESULTS}" >&"${FPR_OUTPUT}" 2>&1 \
-	     && ( ! ${FPR_CREATE_PIGLIT_REPORT} \
-			|| ( SUMMARY=$("${FPR_PIGLIT_PATH}"/piglit summary console -d "${PIGLIT_REFERENCE}" "${PIGLIT_RESULTS}") \
-				   && read -ra RESULTS <<< $(echo "${SUMMARY}" | grep ^regressions) \
-				   && ( test "x${RESULTS[2]}" = "x0" \
-					      || ( echo "${PIGLIT_NAME}" \
-							 && echo "${SUMMARY}" \
-							 && "${FPR_PIGLIT_PATH}"/piglit summary html -e pass -o "${PIGLIT_SUMMARY}" "${PIGLIT_REFERENCE}" "${PIGLIT_RESULTS}" > /dev/null 2>&1 ) ) ) ) ) )
+run_tests
 
 exit $?
-
-
-
-# Reminder compilation line for VK-GL-CTS
-# ---------------------------------------
-
-# cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-Werror -Wno-error=unused-command-line-argument -m64" -DCMAKE_CXX_FLAGS="-Werror -Wno-error=unused-command-line-argument -m64" -DCMAKE_C_COMPILER=clang-3.9 -DCMAKE_CXX_COMPILER=clang++-3.9 -DDEQP_TARGET=x11_egl -DGLCTS_GTF_TARGET=gles32 -DCMAKE_LIBRARY_PATH=/home/agomez/devel/graphics/install/lib/ -DCMAKE_INCLUDE_PATH=/home/agomez/devel/graphics/install/include/
