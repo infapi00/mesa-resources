@@ -68,6 +68,39 @@ check_option_args() {
 }
 
 #------------------------------------------------------------------------------
+#			Function: generate_pattern
+#------------------------------------------------------------------------------
+#
+# generates exclusion/inclusion patterns
+#   $1 - the testsuite for which the pattern is generated
+# outputs:
+#   the generated exclusion/inclusion pattern
+# returns:
+#   0 is success, an error code otherwise
+function generate_pattern {
+    if [ ! -f "$FPR_PATTERNS_FILE" ]; then
+	printf "\nThe patterns file: \"$FPR_PATTERNS_FILE\" doesn't exist.\n" >&2
+	usage
+	return 12
+    fi
+    if $FPR_GENERATE_FORCED_PATTERN; then
+	FPR_FORCED_PATTERN_TOKEN=$(($FPR_INVERT_FORCED_PATTERN && echo "-t") || echo "-x")
+	for i in $($FPR_GREP $FPR_GL_DRIVER "$FPR_PATTERNS_FILE" | $FPR_GREP $1 | $FPR_GREP "forced-exclusion" | cut -d : -f 2); do
+	    FPR_PATTERNS_PARAMETERS="$FPR_FORCED_PATTERN_TOKEN $i $FPR_PATTERNS_PARAMETERS"
+	done
+    fi
+    if $FPR_GENERATE_OPTIONAL_PATTERN; then
+	FPR_OPTIONAL_PATTERN_TOKEN=$(($FPR_INVERT_OPTIONAL_PATTERN && echo "-t") || echo "-x")
+	for i in $($FPR_GREP $FPR_GL_DRIVER "$FPR_PATTERNS_FILE" | $FPR_GREP $1 | $FPR_GREP "optional-exclusion" | cut -d : -f 2); do
+	    FPR_PATTERNS_PARAMETERS="$FPR_OPTIONAL_PATTERN_TOKEN $i $FPR_PATTERNS_PARAMETERS"
+	done
+    fi
+    echo $FPR_PATTERNS_PARAMETERS
+
+    return 0
+}
+
+#------------------------------------------------------------------------------
 #			Function: inner_run_tests
 #------------------------------------------------------------------------------
 #
@@ -197,7 +230,10 @@ function run_tests {
 	export -p PIGLIT_DEQP_VK_BIN="$FPR_VK_GL_CTS_BUILD_PATH"/external/vulkancts/modules/vulkan/deqp-vk
 	export -p PIGLIT_DEQP_VK_EXTRA_ARGS="--deqp-log-images=disable --deqp-log-shader-sources=disable"
 	FPR_INNER_RUN_SET=deqp_vk
-	FPR_INNER_RUN_PARAMETERS=""
+	FPR_INNER_RUN_PARAMETERS="$(generate_pattern vk-cts)"
+	if [ $? -ne 0 ]; then
+	    return $?
+	fi
 	FPR_INNER_RUN_NAME=$VK_CTS_NAME
 	FPR_INNER_RUN_RESULTS=$VK_CTS_RESULTS
 	FPR_INNER_RUN_REFERENCE=$VK_CTS_REFERENCE
@@ -220,7 +256,10 @@ function run_tests {
 	export -p MESA_GL_VERSION_OVERRIDE=4.5
 	export -p MESA_GLSL_VERSION_OVERRIDE=450
 	FPR_INNER_RUN_SET=cts_gl
-	FPR_INNER_RUN_PARAMETERS="-t GL45"
+	FPR_INNER_RUN_PARAMETERS="-t GL45 $(generate_pattern gl-cts)"
+	if [ $? -ne 0 ]; then
+	    return $?
+	fi
 	FPR_INNER_RUN_NAME=$GL_CTS_NAME
 	FPR_INNER_RUN_RESULTS=$GL_CTS_RESULTS
 	FPR_INNER_RUN_REFERENCE=$GL_CTS_REFERENCE
@@ -247,7 +286,10 @@ function run_tests {
 	export -p PIGLIT_DEQP_GLES2_EXTRA_ARGS="--deqp-visibility hidden"
 	export -p MESA_GLES_VERSION_OVERRIDE=2.0
 	FPR_INNER_RUN_SET=deqp_gles2
-	FPR_INNER_RUN_PARAMETERS="-t dEQP-GLES2"
+	FPR_INNER_RUN_PARAMETERS="-t dEQP-GLES2 $(generate_pattern deqp-gles2)"
+	if [ $? -ne 0 ]; then
+	    return $?
+	fi
 	FPR_INNER_RUN_NAME=$DEQP_GLES2_NAME
 	FPR_INNER_RUN_RESULTS=$DEQP_GLES2_RESULTS
 	FPR_INNER_RUN_REFERENCE=$DEQP_GLES2_REFERENCE
@@ -270,7 +312,10 @@ function run_tests {
 	export -p PIGLIT_DEQP_GLES3_EXTRA_ARGS="--deqp-visibility hidden"
 	export -p MESA_GLES_VERSION_OVERRIDE=3.0
 	FPR_INNER_RUN_SET=deqp_gles3
-	FPR_INNER_RUN_PARAMETERS="-t dEQP-GLES3"
+	FPR_INNER_RUN_PARAMETERS="-t dEQP-GLES3 $(generate_pattern deqp-gles3)"
+	if [ $? -ne 0 ]; then
+	    return $?
+	fi
 	FPR_INNER_RUN_NAME=$DEQP_GLES3_NAME
 	FPR_INNER_RUN_RESULTS=$DEQP_GLES3_RESULTS
 	FPR_INNER_RUN_REFERENCE=$DEQP_GLES3_REFERENCE
@@ -293,7 +338,10 @@ function run_tests {
 	export -p PIGLIT_DEQP_GLES31_EXTRA_ARGS="--deqp-visibility hidden"
 	export -p MESA_GLES_VERSION_OVERRIDE=3.1
 	FPR_INNER_RUN_SET=deqp_gles31
-	FPR_INNER_RUN_PARAMETERS="-t dEQP-GLES31"
+	FPR_INNER_RUN_PARAMETERS="-t dEQP-GLES31 $(generate_pattern deqp-gles31)"
+	if [ $? -ne 0 ]; then
+	    return $?
+	fi
 	FPR_INNER_RUN_NAME=$DEQP_GLES31_NAME
 	FPR_INNER_RUN_RESULTS=$DEQP_GLES31_RESULTS
 	FPR_INNER_RUN_REFERENCE=$DEQP_GLES31_REFERENCE
@@ -313,7 +361,10 @@ function run_tests {
 
     if $FPR_RUN_PIGLIT; then
 	FPR_INNER_RUN_SET=all
-	FPR_INNER_RUN_PARAMETERS="-x texcombine -x texCombine"
+	FPR_INNER_RUN_PARAMETERS="$(generate_pattern piglit)"
+	if [ $? -ne 0 ]; then
+	    return $?
+	fi
 	FPR_INNER_RUN_NAME=$PIGLIT_NAME
 	FPR_INNER_RUN_RESULTS=$PIGLIT_RESULTS
 	FPR_INNER_RUN_REFERENCE=$PIGLIT_REFERENCE
@@ -338,29 +389,34 @@ usage() {
 Usage: $basename [options] --driver [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe] --commit <mesa-commit-id>
 
 Options:
-  --dry-run               Does everything except running the tests
-  --verbose               Be verbose
-  --help                  Display this help and exit successfully
-  --driver                Which driver with which to run the tests [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe]
-  --commit                Mesa commit to output
-  --base-path             PATH from which to create the rest of the relative paths
-  --piglit-path           PATH to the built piglit binaries
-  --piglit-results-path   PATH to the piglit results
-  --vk-gl-cts-path        PATH to the built vk-gl-cts binaries
-  --deqp-path             PATH to the built dEQP binaries
-  --vk-cts-prefix         Prefix to use with the vk-cts run
-  --gl-cts-prefix         Prefix to use with the gl-cts run
-  --deqp-gles2-prefix     Prefix to use with the dEQP GLES2 run
-  --deqp-gles3-prefix     Prefix to use with the dEQP GLES3 run
-  --deqp-gles31-prefix    Prefix to use with the dEQP GLES3.1 run
-  --piglit-prefix         Prefix to use with the piglit run
-  --run-vk-cts            Run vk-cts
-  --run-gl-cts            Run gl-cts
-  --run-deqp-gles2-cts    Run dEQP GLES2
-  --run-deqp-gles3-cts    Run dEQP GLES3
-  --run-deqp-gles31-cts   Run dEQP GLES31
-  --run-piglit            Run piglit
-  --create-piglit-report  Create results report
+  --dry-run                   Does everything except running the tests
+  --verbose                   Be verbose
+  --help                      Display this help and exit successfully
+  --driver                    Which driver with which to run the tests [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe]
+  --commit                    Mesa commit to output
+  --base-path                 PATH from which to create the rest of the relative paths
+  --piglit-path               PATH to the built piglit binaries
+  --piglit-results-path       PATH to the piglit results
+  --vk-gl-cts-path            PATH to the built vk-gl-cts binaries
+  --deqp-path                 PATH to the built dEQP binaries
+  --vk-cts-prefix             Prefix to use with the vk-cts run
+  --gl-cts-prefix             Prefix to use with the gl-cts run
+  --deqp-gles2-prefix         Prefix to use with the dEQP GLES2 run
+  --deqp-gles3-prefix         Prefix to use with the dEQP GLES3 run
+  --deqp-gles31-prefix        Prefix to use with the dEQP GLES3.1 run
+  --piglit-prefix             Prefix to use with the piglit run
+  --run-vk-cts                Run vk-cts
+  --run-gl-cts                Run gl-cts
+  --run-deqp-gles2-cts        Run dEQP GLES2
+  --run-deqp-gles3-cts        Run dEQP GLES3
+  --run-deqp-gles31-cts       Run dEQP GLES31
+  --run-piglit                Run piglit
+  --create-piglit-report      Create results report
+  --patterns-file             PATH to the patterns file
+  --ignore-forced-patterns    Ignore the forced patterns
+  --ignore-optional-patterns  Ignore the optional patterns
+  --invert-forced-patterns    Invert the forced patterns
+  --invert-optional-patterns  Invert the optional patterns
 
 HELP
 }
@@ -502,6 +558,28 @@ do
     --create-piglit-report)
 	FPR_CREATE_PIGLIT_REPORT=true
 	;;
+    # PATH to the patterns file
+    --patterns-file)
+	check_option_args $1 $2
+	shift
+	FPR_PATTERNS_FILE=$1
+	;;
+    # Ignore the forced patterns
+    --ignore-forced-patterns)
+	FPR_GENERATE_FORCED_PATTERN=false
+	;;
+    # Ignore the optional patterns
+    --ignore-optional-patterns)
+	FPR_GENERATE_OPTIONAL_PATTERN=false
+	;;
+    # Invert the forced patterns
+    --invert-forced-patterns)
+	FPR_INVERT_FORCED_PATTERN=true
+	;;
+    # Invert the optional patterns
+    --invert-optional-patterns)
+	FPR_INVERT_OPTIONAL_PATTERN=true
+	;;
     --*)
 	printf "\nError: unknown option: $1.\n"
 	usage
@@ -556,6 +634,12 @@ FPR_RUN_PIGLIT="${FPR_RUN_PIGLIT:-false}"
 
 FPR_VERBOSE="${FPR_VERBOSE:-false}"
 
+if ${FPR_VERBOSE}; then
+    FPR_OUTPUT=1
+else
+    FPR_OUTPUT=/dev/null
+fi
+
 # dry run?
 # --------
 
@@ -566,11 +650,14 @@ FPR_DRY_RUN="${FPR_DRY_RUN:-false}"
 
 FPR_CREATE_PIGLIT_REPORT="${FPR_CREATE_PIGLIT_REPORT:-false}"
 
-if ${FPR_VERBOSE}; then
-    FPR_OUTPUT=1
-else
-    FPR_OUTPUT=/dev/null
-fi
+# Patterns ...
+# ------------
+
+FPR_PATTERNS_FILE="${FPR_PATTERNS_FILE:-${FPR_DEV_PATH}/f-p-r-patterns.txt}"
+FPR_GENERATE_FORCED_PATTERN="${FPR_GENERATE_FORCED_PATTERN:-true}"
+FPR_GENERATE_OPTIONAL_PATTERN="${FPR_GENERATE_OPTIONAL_PATTERN:-true}"
+FPR_INVERT_FORCED_PATTERN="${FPR_INVERT_FORCED_PATTERN:-false}"
+FPR_INVERT_OPTIONAL_PATTERN="${FPR_INVERT_OPTIONAL_PATTERN:-false}"
 
 run_tests
 
