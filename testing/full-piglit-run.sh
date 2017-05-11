@@ -24,10 +24,10 @@ export -p DISPLAY
 #   0 is success, an error code otherwise
 check_driver() {
     case "x$1" in
-	"xi965" | "xnouveau" | "xnvidia" | "xradeon" | "xamd"  | "xllvmpipe" | "xswr" | "xsoftpipe" )
+	"xi965" | "xnouveau" | "xnvidia" | "xradeon" | "xamd"  | "xllvmpipe" | "xswr" | "xsoftpipe" | "xanv" | "xradv" )
 	    ;;
 	*)
-	    printf "\nA driver among [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe] has to be provided.\n"
+	    printf "\nA driver among [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe|anv|radv] has to be provided.\n"
 	    usage
 	    return 1
 	    ;;
@@ -386,13 +386,13 @@ usage() {
     basename="`expr "//$0" : '.*/\([^/]*\)'`"
     cat <<HELP
 
-Usage: $basename [options] --driver [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe] --commit <mesa-commit-id>
+Usage: $basename [options] --driver [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe|anv|radv] --commit <mesa-commit-id>
 
 Options:
   --dry-run                   Does everything except running the tests
   --verbose                   Be verbose
   --help                      Display this help and exit successfully
-  --driver                    Which driver with which to run the tests [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe]
+  --driver                    Which driver with which to run the tests [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe|anv|radv]
   --commit                    Mesa commit to output
   --base-path                 PATH from which to create the rest of the relative paths
   --piglit-path               PATH to the built piglit binaries
@@ -452,7 +452,7 @@ do
 	usage
 	exit 0
 	;;
-    # Which driver with which to run the tests [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe]
+    # Which driver with which to run the tests [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe|anv|radv]
     --driver)
 	check_option_args $1 $2
 	shift
