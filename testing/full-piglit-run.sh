@@ -234,6 +234,7 @@ function run_tests {
 	if [ $? -ne 0 ]; then
 	    return $?
 	fi
+	$FPR_RUN_VK_CTS_ALL_CONCURRENT && FPR_INNER_RUN_PARAMETERS="-c --deqp-mode=group $FPR_INNER_RUN_PARAMETERS"
 	FPR_INNER_RUN_NAME=$VK_CTS_NAME
 	FPR_INNER_RUN_RESULTS=$VK_CTS_RESULTS
 	FPR_INNER_RUN_REFERENCE=$VK_CTS_REFERENCE
@@ -417,6 +418,7 @@ Options:
   --ignore-optional-patterns  Ignore the optional patterns
   --invert-forced-patterns    Invert the forced patterns
   --invert-optional-patterns  Invert the optional patterns
+  --vk-cts-all-concurrent     Run all the vk-cts tests concurrently
 
 HELP
 }
@@ -580,6 +582,10 @@ do
     --invert-optional-patterns)
 	FPR_INVERT_OPTIONAL_PATTERN=true
 	;;
+    # Run all the vk-cts tests concurrently
+    --vk-cts-all-concurrent)
+	FPR_RUN_VK_CTS_ALL_CONCURRENT=true
+	;;
     --*)
 	printf "\nError: unknown option: $1.\n"
 	usage
@@ -628,6 +634,11 @@ FPR_RUN_DEQP_GLES2="${FPR_RUN_DEQP_GLES2:-false}"
 FPR_RUN_DEQP_GLES3="${FPR_RUN_DEQP_GLES3:-false}"
 FPR_RUN_DEQP_GLES31="${FPR_RUN_DEQP_GLES31:-false}"
 FPR_RUN_PIGLIT="${FPR_RUN_PIGLIT:-false}"
+
+# Run the tests concurrently?
+# ---------------------------
+
+FPR_RUN_VK_CTS_ALL_CONCURRENT="${FPR_RUN_VK_CTS_ALL_CONCURRENT:-false}"
 
 # Verbose?
 # --------
