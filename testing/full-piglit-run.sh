@@ -252,12 +252,11 @@ function run_tests {
 
     if $FPR_RUN_GL_CTS; then
 	export -p PIGLIT_CTS_GL_BIN="${FPR_VK_GL_CTS_BUILD_PATH}"/external/openglcts/modules/glcts
-	export -p PIGLIT_CTS_GL_EXTRA_ARGS="--deqp-case=GL45*"
 	export -p MESA_GLES_VERSION_OVERRIDE=3.2
 	export -p MESA_GL_VERSION_OVERRIDE=4.5
 	export -p MESA_GLSL_VERSION_OVERRIDE=450
-	FPR_INNER_RUN_SET=cts_gl
-	FPR_INNER_RUN_PARAMETERS="-t GL45 $(generate_pattern gl-cts)"
+	FPR_INNER_RUN_SET=cts_gl45
+	FPR_INNER_RUN_PARAMETERS="$(generate_pattern gl-cts)"
 	if [ $? -ne 0 ]; then
 	    return $?
 	fi
@@ -276,7 +275,6 @@ function run_tests {
 	    return $?
 	fi
         unset PIGLIT_CTS_GL_BIN
-        unset PIGLIT_CTS_GL_EXTRA_ARGS
         unset MESA_GLES_VERSION_OVERRIDE
         unset MESA_GLSL_VERSION_OVERRIDE
         unset MESA_GLSL_VERSION_OVERRIDE
