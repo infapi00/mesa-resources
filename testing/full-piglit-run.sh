@@ -22,7 +22,7 @@ export -p DISPLAY
 #   $1 - the intended GL driver to run
 # returns:
 #   0 is success, an error code otherwise
-check_driver() {
+function check_driver() {
     case "x$1" in
 	"xi965" | "xnouveau" | "xnvidia" | "xradeon" | "xamd"  | "xllvmpipe" | "xswr" | "xsoftpipe" | "xanv" | "xradv" )
 	    ;;
@@ -47,7 +47,7 @@ check_driver() {
 # returns:
 #   if it returns, everything is good
 #   otherwise it exit's
-check_option_args() {
+function check_option_args() {
     option=$1
     arg=$2
 
@@ -381,7 +381,7 @@ function run_tests {
 #------------------------------------------------------------------------------
 # Displays the script usage and exits successfully
 #
-usage() {
+function usage() {
     basename="`expr "//$0" : '.*/\([^/]*\)'`"
     cat <<HELP
 
