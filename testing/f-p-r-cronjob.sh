@@ -163,7 +163,7 @@ function build_piglit() {
 # returns:
 #   0 is success, an error code otherwise
 function create_piglit_reference() {
-    ln -sf $(ls -d $CFPR_BASE_PATH/piglit-results/results/all-i965*| tail -1) $CFPR_BASE_PATH/piglit-results/reference/all-i965
+    ln -sfr $(ls -d $CFPR_BASE_PATH/piglit-results/results/all-i965*| tail -1) -T $CFPR_BASE_PATH/piglit-results/reference/all-i965
 
     return 0
 }
