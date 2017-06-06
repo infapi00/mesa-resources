@@ -10,6 +10,22 @@
 # 0 3 * * * <path_to>/f-p-r-cronjob.sh "mesa-remote/mesa-branch" "vk-gl-cts-remote/vk-gl-cts-branch" "piglit-remote/piglit-branch" wrapper
 
 #------------------------------------------------------------------------------
+#			Function: header
+#------------------------------------------------------------------------------
+#
+# prints a header, if not quiet
+#   $1 - name to print out
+# returns:
+#   0 is success, an error code otherwise
+function header {
+    CFPR_TIMESTAMP=$(date +%Y%m%d%H%M%S)
+    CFPR_SPACE=$(df -h)
+    printf "%s\n" "Running $1 at $CFPR_TIMESTAMP" "" "$CFPR_SPACE" "" >&2
+
+    return 0
+}
+
+#------------------------------------------------------------------------------
 #			Function: build_mesa
 #------------------------------------------------------------------------------
 #
@@ -214,6 +230,8 @@ if [ "x$4" = "xwrapper" ]; then
     popd >&"${CFPR_OUTPUT}" 2>&1
     exit 0
 fi
+
+header
 
 export VK_ICD_FILENAMES="$CFPR_BASE_PATH/install/share/vulkan/icd.d/intel_icd.x86_64.json"
 
