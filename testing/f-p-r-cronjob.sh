@@ -7,7 +7,90 @@
 #
 # $ crontab -e
 # ...
-# 0 3 * * * <path_to>/f-p-r-cronjob.sh "mesa-remote/mesa-branch" "vk-gl-cts-remote/vk-gl-cts-branch" "piglit-remote/piglit-branch" wrapper
+# 0 3 * * * <path_to>/f-p-r-cronjob.sh --mesa-commit "mesa-remote/mesa-branch" --vk-gl-cts-commit "vk-gl-cts-remote/vk-gl-cts-branch" --piglit-commit "piglit-remote/piglit-branch"
+
+export LC_ALL=C
+
+PATH=${HOME}/.local/bin$(echo :$PATH | sed -e s@:${HOME}/.local/bin@@g)
+
+DISPLAY="${DISPLAY:-:0.0}"
+export -p DISPLAY
+
+MAKEFLAGS=-j$(getconf _NPROCESSORS_ONLN)
+export MAKEFLAGS
+
+#------------------------------------------------------------------------------
+#			Function: check_verbosity
+#------------------------------------------------------------------------------
+#
+# perform sanity check on the passed verbosity level:
+#   $1 - the verbosity to use
+# returns:
+#   0 is success, an error code otherwise
+function check_verbosity() {
+    case "x$1" in
+	"xfull" | "xnormal" | "xquiet" )
+	    ;;
+	*)
+	    printf "Error: Only verbosity levels among [full|normal|quiet] are allowed.\n" >&2
+	    usage
+	    return 1
+	    ;;
+    esac
+
+    return 0
+}
+
+
+#------------------------------------------------------------------------------
+#			Function: check_option_args
+#------------------------------------------------------------------------------
+#
+# perform sanity checks on cmdline args which require arguments
+# arguments:
+#   $1 - the option being examined
+#   $2 - the argument to the option
+# returns:
+#   if it returns, everything is good
+#   otherwise it exit's
+function check_option_args() {
+    option=$1
+    arg=$2
+
+    # check for an argument
+    if [ x"$arg" = x ]; then
+	printf "Error: the '$option' option is missing its required argument.\n" >&2
+	usage
+	exit 2
+    fi
+
+    # does the argument look like an option?
+    echo $arg | $CFPR_GREP "^-" > /dev/null
+    if [ $? -eq 0 ]; then
+	printf "Error: the argument '$arg' of option '$option' looks like an option itself.\n" >&2
+	usage
+	exit 3
+    fi
+}
+
+
+#------------------------------------------------------------------------------
+#			Function: sanity_check
+#------------------------------------------------------------------------------
+#
+# perform sanity check on the passed parameters:
+# returns:
+#   0 is success, an error code otherwise
+function sanity_check() {
+    if [ "x$1" == "x" ] || [ "x$2" == "x" ] || [ "x$3" == "x" ]; then
+	printf "Error: Missing parameters.\n" >&2
+	usage
+	return 2
+    fi
+
+    return 0
+}
+
 
 #------------------------------------------------------------------------------
 #			Function: header
@@ -24,6 +107,7 @@ function header {
 
     return 0
 }
+
 
 #------------------------------------------------------------------------------
 #			Function: build_mesa
@@ -203,34 +287,213 @@ function clean_piglit() {
 }
 
 
-CFPR_TEMP_PATH="$HOME/cfpr-temp"
-CFPR_MESA_PATH="$HOME/i965/mesa.git"
-CFPR_MESA_BRANCH="$1"
-CFPR_VK_GL_CTS_PATH="$HOME/i965/vk-gl-cts.git"
-CFPR_VK_GL_CTS_BRANCH="$2"
-CFPR_PIGLIT_PATH="$HOME/i965/piglit.git"
-CFPR_PIGLIT_BRANCH="$3"
-CFPR_BASE_PATH="$HOME/i965"
+#------------------------------------------------------------------------------
+#			Function: usage
+#------------------------------------------------------------------------------
+# Displays the script usage and exits successfully
+#
+usage() {
+    basename="`expr "//$0" : '.*/\([^/]*\)'`"
+    cat <<HELP
 
-CFPR_VERBOSITY="${CFPR_VERBOSITY:-false}"
+Usage: $basename [options] --mesa-commit <mesa-commit-id> --vk-gl-cts-commit <vk-gl-cts-commit-id> --piglit-commit <piglit-commit-id>
 
-if $CFPR_VERBOSITY; then
-    CFPR_OUTPUT=1
-else
-    CFPR_OUTPUT=/dev/null
+Options:
+  --help                  Display this help and exit successfully
+  --verbosity             Which verbosity level to use [full|normal|quite]. Default, normal.
+  --force-clean           Forces the cleaning of the working env
+  --base-path             PATH from which to create the rest of the relative paths
+  --tmp-path              PATH in which to do the temporary work
+  --mesa-path             PATH to the mesa repository
+  --vk-gl-cts-path        PATH to the vk-gl-cts repository
+  --piglit-path           PATH to the piglit repository
+  --mesa-commit           mesa commit to use
+  --vk-gl-cts-commit      VK-GL-CTS commit to use
+  --piglit-commit         piglit commit to use
+
+HELP
+}
+
+
+#------------------------------------------------------------------------------
+#			Script main line
+#------------------------------------------------------------------------------
+#
+
+# Choose which grep program to use (on Solaris, must be gnu grep)
+if [ "x$CDP_GREP" = "x" ] ; then
+    if [ -x /usr/gnu/bin/grep ] ; then
+	CFPR_GREP=/usr/gnu/bin/grep
+    else
+	CFPR_GREP=grep
+    fi
 fi
 
-if [ "x$CFPR_MESA_BRANCH" == "x" ] || [ "x$CFPR_VK_GL_CTS_BRANCH" == "x" ] || [ "x$CFPR_PIGLIT_BRANCH" == "x" ]; then
-    printf "%s\n" "Missing parameters."
+
+# Process command line args
+while [ $# != 0 ]
+do
+    case $1 in
+    # Display this help and exit successfully
+    --help)
+	usage
+	exit 0
+	;;
+    # Which verbosity level to use [full|normal|quite]. Default, normal.
+    --verbosity)
+	check_option_args $1 $2
+	shift
+	export CFPR_VERBOSITY=$1
+	;;
+    # Forces the cleaning of the working env
+    --force-clean)
+	CFPR_FORCE_CLEAN=true
+	;;
+    # Not run as a JHBuild wrapper
+    --no-jhbuild-wrapper)
+	CFPR_JHBUILD_WRAPPER=false
+	;;
+    # PATH from which to create the rest of the relative paths
+    --base-path)
+	check_option_args $1 $2
+	shift
+	export CFPR_BASE_PATH=$1
+	;;
+    # PATH in which to do the temporary work
+    --tmp-path)
+	check_option_args $1 $2
+	shift
+	export CFPR_TEMP_PATH=$1
+	;;
+    # PATH to the mesa repository
+    --mesa-path)
+	check_option_args $1 $2
+	shift
+	export CFPR_MESA_PATH=$1
+	;;
+    # PATH to the vk-gl-cts repository
+    --vk-gl-cts-path)
+	check_option_args $1 $2
+	shift
+	export CFPR_VK_GL_CTS_PATH=$1
+	;;
+    # PATH to the piglit repository
+    --piglit-path)
+	check_option_args $1 $2
+	shift
+	export CFPR_PIGLIT_PATH=$1
+	;;
+    # mesa commit to use
+    --mesa-commit)
+	check_option_args $1 $2
+	shift
+	export CFPR_MESA_BRANCH=$1
+	;;
+    # VK-GL-CTS commit to use
+    --vk-gl-cts-commit)
+	check_option_args $1 $2
+	shift
+	export CFPR_VK_GL_CTS_BRANCH=$1
+	;;
+    # piglit commit to use
+    --piglit-commit)
+	check_option_args $1 $2
+	shift
+	export CFPR_PIGLIT_BRANCH=$1
+	;;
+    --*)
+	printf "Error: unknown option: $1\n" >&2
+	usage
+	exit 1
+	;;
+    -*)
+	printf "Error: unknown option: $1\n" >&2
+	usage
+	exit 1
+	;;
+    *)
+	printf "Error: unknown parameter: $1\n" >&2
+	usage
+	exit 1
+	;;
+    esac
+
+    shift
+done
+
+
+# Paths ...
+# ---------
+
+CFPR_BASE_PATH="${CFPR_BASE_PATH:-$HOME/i965}"
+CFPR_TEMP_PATH="${CFPR_TEMP_PATH:-$CFPR_BASE_PATH/cfpr-temp}"
+CFPR_MESA_PATH="${CFPR_MESA_PATH:-$CFPR_BASE_PATH/mesa.git}"
+CFPR_VK_GL_CTS_PATH="${CFPR_VK_GL_CTS_PATH:-$CFPR_BASE_PATH/vk-gl-cts.git}"
+CFPR_PIGLIT_PATH="${CFPR_PIGLIT_PATH:-$CFPR_BASE_PATH/piglit.git}"
+
+
+# Force clean
+# ------------
+
+CFPR_FORCE_CLEAN="${CFPR_FORCE_CLEAN:-false}"
+
+if $CFPR_FORCE_CLEAN; then
+    clean_mesa
+    clean_piglit
+    clean_vk_gl_cts
+    printf "%s\n" "" "rm -Ir $CFPR_TEMP_PATH" ""
+    rm -Ir "$CFPR_TEMP_PATH"
+
+    exit 0
+fi
+
+
+# Sanity check
+# ------------
+
+sanity_check "$CFPR_MESA_BRANCH" "$CFPR_VK_GL_CTS_BRANCH" "$CFPR_PIGLIT_BRANCH"
+
+if [ $? -ne 0 ]; then
     exit 2
 fi
 
-if [ "x$4" = "xwrapper" ]; then
-    pushd "$HOME/mesa-resources.git/jhbuild/" >&"${CFPR_OUTPUT}" 2>&1
-    ./jhbuild.sh i965 run "$0" "$1" "$2" "$3" >&"${CFPR_OUTPUT}" 2>&1
-    popd >&"${CFPR_OUTPUT}" 2>&1
-    exit 0
+
+# Running wrapper ...
+# -------------------
+
+CFPR_JHBUILD_WRAPPER="${CFPR_JHBUILD_WRAPPER:-true}"
+
+if $CFPR_JHBUILD_WRAPPER; then
+    pushd "$HOME/mesa-resources.git/jhbuild/" > /dev/null
+    ./jhbuild.sh i965 run "$0" --no-jhbuild-wrapper
+    CFPR_RESULT=$?
+    popd > /dev/null
+
+    exit $CFPR_RESULT
 fi
+
+
+# Verbosity level
+# ---------------
+
+CFPR_VERBOSITY="${CFPR_VERBOSITY:-normal}"
+
+check_verbosity $CFPR_VERBOSITY
+if [ $? -ne 0 ]; then
+    exit 13
+fi
+
+if [ "x$CFPR_VERBOSITY" != "xfull" ]; then
+    exec > /dev/null
+fi
+
+if [ "x$CFPR_VERBOSITY" == "xquiet" ]; then
+    exec 2>&1
+fi
+
+
+# Running wrapped ...
+# -------------------
 
 header
 
@@ -242,6 +505,8 @@ pushd "$CFPR_TEMP_PATH/jail"
 
 build_mesa true
 clean_mesa
+
+printf "%s\n" "" "Checking for regressions in piglit ..." "" >&2
 
 build_piglit
 
@@ -268,6 +533,8 @@ $HOME/mesa-resources.git/testing/full-piglit-run.sh \
     --run-piglit
 
 clean_piglit
+
+printf "%s\n" "" "Checking VK CTS progress ..." "" >&2
 
 build_vk_gl_cts
 
