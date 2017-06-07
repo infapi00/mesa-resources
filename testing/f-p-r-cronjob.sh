@@ -511,7 +511,7 @@ printf "%s\n" "" "Checking for regressions in piglit ..." "" >&2
 build_piglit
 
 $HOME/mesa-resources.git/testing/full-piglit-run.sh \
-    --verbose \
+    --verbosity "$CFPR_VERBOSITY" \
     --driver i965 \
     --commit "$CFPR_MESA_COMMIT" \
     --base-path "$CFPR_BASE_PATH" \
@@ -524,7 +524,7 @@ build_mesa false
 clean_mesa
 
 $HOME/mesa-resources.git/testing/full-piglit-run.sh \
-    --verbose \
+    --verbosity "$CFPR_VERBOSITY" \
     --create-piglit-report \
     --driver i965 \
     --commit "$CFPR_MESA_COMMIT" \
@@ -539,7 +539,7 @@ printf "%s\n" "" "Checking VK CTS progress ..." "" >&2
 build_vk_gl_cts
 
 $HOME/mesa-resources.git/testing/full-piglit-run.sh \
-    --verbose \
+    --verbosity "$CFPR_VERBOSITY" \
     --create-piglit-report \
     --driver anv \
     --commit "$CFPR_MESA_COMMIT" \
