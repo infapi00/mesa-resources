@@ -1,0 +1,7 @@
+This directory includes:
+
+SCRIPTS
+=======
+
+   * run-n-times-flaky-piglit-test.sh: run a piglit test n times, and
+     returns how many runs have passed. Useful for flaky tests.
