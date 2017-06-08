@@ -79,6 +79,10 @@ function check_option_args() {
 #------------------------------------------------------------------------------
 #
 # perform sanity check on the passed parameters:
+# arguments:
+#   $1 - an existing mesa's commit id
+#   $2 - an existing VK-GL-CTS' commit id
+#   $3 - an existing piglit's commit id
 # returns:
 #   0 is success, an error code otherwise
 function sanity_check() {
@@ -86,6 +90,40 @@ function sanity_check() {
 	printf "Error: Missing parameters.\n" >&2
 	usage
 	return 2
+    fi
+
+    pushd "$CFPR_MESA_PATH"
+    git fetch gogs
+    git fetch origin
+    git show -s --pretty=format:%h "$1" > /dev/null
+    CFPR_RESULT=$?
+    popd
+    if [ $CFPR_RESULT -ne 0 ]; then
+	printf "%s\n" "" "Error: mesa's commit id doesn't exist in the repository." "" >&2
+	usage
+	return 3
+    fi
+
+    pushd "$CFPR_VK_GL_CTS_PATH"
+    git fetch origin
+    git show -s --pretty=format:%h "$2" > /dev/null
+    CFPR_RESULT=$?
+    popd
+    if [ $CFPR_RESULT -ne 0 ]; then
+	printf "%s\n" "" "Error: VK-GL-CTS' commit id doesn't exist in the repository." "" >&2
+	usage
+	return 4
+    fi
+
+    pushd "$CFPR_PIGLIT_PATH"
+    git fetch origin
+    git show -s --pretty=format:%h "$3" > /dev/null
+    CFPR_RESULT=$?
+    popd
+    if [ $CFPR_RESULT -ne 0 ]; then
+	printf "%s\n" "" "Error: piglit's commit id doesn't exist in the repository." "" >&2
+	usage
+	return 5
     fi
 
     return 0
@@ -123,8 +161,6 @@ function build_mesa() {
     rm -rf "$CFPR_TEMP_PATH/mesa"
     mkdir -p "$CFPR_TEMP_PATH/mesa"
     pushd "$CFPR_MESA_PATH"
-    git fetch gogs
-    git fetch origin
     if $1; then
 	COMMIT=$(git merge-base origin/master "$CFPR_MESA_BRANCH")
     else
@@ -182,7 +218,6 @@ function build_vk_gl_cts() {
     rm -rf "$CFPR_TEMP_PATH/vk-gl-cts"
     mkdir -p "$CFPR_TEMP_PATH/vk-gl-cts"
     pushd "$CFPR_VK_GL_CTS_PATH"
-    git fetch origin
     git worktree add -b cfpr "$CFPR_TEMP_PATH/vk-gl-cts" "$CFPR_VK_GL_CTS_BRANCH"
     popd
     pushd "$CFPR_TEMP_PATH/vk-gl-cts"
@@ -243,7 +278,6 @@ function build_piglit() {
     rm -rf "$CFPR_TEMP_PATH/piglit"
     mkdir -p "$CFPR_TEMP_PATH/piglit"
     pushd "$CFPR_PIGLIT_PATH"
-    git fetch origin
     git worktree add -b cfpr "$CFPR_TEMP_PATH/piglit" "$CFPR_PIGLIT_BRANCH"
     popd
     pushd "$CFPR_TEMP_PATH/piglit"
@@ -288,6 +322,84 @@ function clean_piglit() {
 
 
 #------------------------------------------------------------------------------
+#			Function: run_tests
+#------------------------------------------------------------------------------
+#
+# performs the execution of the tests
+# returns:
+#   0 is success, an error code otherwise
+function run_tests {
+    header
+
+    export VK_ICD_FILENAMES="$CFPR_BASE_PATH/install/share/vulkan/icd.d/intel_icd.x86_64.json"
+
+    mkdir -p "$CFPR_TEMP_PATH/jail"
+
+    pushd "$CFPR_TEMP_PATH/jail"
+
+    if $CFPR_RUN_PIGLIT; then
+	printf "%s\n" "" "Checking for regressions in piglit ..." "" >&2
+
+	build_mesa true
+	clean_mesa
+
+	build_piglit
+
+	$HOME/mesa-resources.git/testing/full-piglit-run.sh \
+	    --verbosity "$CFPR_VERBOSITY" \
+	    --driver i965 \
+	    --commit "$CFPR_MESA_COMMIT" \
+	    --base-path "$CFPR_BASE_PATH" \
+	    --piglit-path "$CFPR_TEMP_PATH/piglit" \
+	    --run-piglit
+
+	create_piglit_reference
+    fi
+
+    if $CFPR_RUN_PIGLIT || $CFPR_RUN_VK_CTS; then
+	build_mesa false
+	clean_mesa
+    fi
+
+    if $CFPR_RUN_PIGLIT; then
+	$HOME/mesa-resources.git/testing/full-piglit-run.sh \
+	    --verbosity "$CFPR_VERBOSITY" \
+	    --create-piglit-report \
+	    --driver i965 \
+	    --commit "$CFPR_MESA_COMMIT" \
+	    --base-path "$CFPR_BASE_PATH" \
+	    --piglit-path "$CFPR_TEMP_PATH/piglit" \
+	    --run-piglit
+
+	clean_piglit
+    fi
+
+    if $CFPR_RUN_VK_CTS; then
+	printf "%s\n" "" "Checking VK CTS progress ..." "" >&2
+
+	build_vk_gl_cts
+
+	$HOME/mesa-resources.git/testing/full-piglit-run.sh \
+	    --verbosity "$CFPR_VERBOSITY" \
+	    --create-piglit-report \
+	    --driver anv \
+	    --commit "$CFPR_MESA_COMMIT" \
+	    --base-path "$CFPR_BASE_PATH" \
+	    --vk-gl-cts-path "$CFPR_TEMP_PATH/vk-gl-cts/build" \
+	    --run-vk-cts \
+	    --invert-optional-patterns
+
+	clean_vk_gl_cts
+    fi
+
+    popd
+    rm -rf "$CFPR_TEMP_PATH/"
+
+    return 0
+}
+
+
+#------------------------------------------------------------------------------
 #			Function: usage
 #------------------------------------------------------------------------------
 # Displays the script usage and exits successfully
@@ -310,6 +422,8 @@ Options:
   --mesa-commit           mesa commit to use
   --vk-gl-cts-commit      VK-GL-CTS commit to use
   --piglit-commit         piglit commit to use
+  --run-vk-cts            Run vk-cts
+  --run-piglit            Run piglit
 
 HELP
 }
@@ -401,6 +515,14 @@ do
 	shift
 	export CFPR_PIGLIT_BRANCH=$1
 	;;
+    # Run vk-cts
+    --run-vk-cts)
+	export CFPR_RUN_VK_CTS=true
+	;;
+    # Run piglit
+    --run-piglit)
+	export CFPR_RUN_PIGLIT=true
+	;;
     --*)
 	printf "Error: unknown option: $1\n" >&2
 	usage
@@ -430,6 +552,13 @@ CFPR_TEMP_PATH="${CFPR_TEMP_PATH:-$CFPR_BASE_PATH/cfpr-temp}"
 CFPR_MESA_PATH="${CFPR_MESA_PATH:-$CFPR_BASE_PATH/mesa.git}"
 CFPR_VK_GL_CTS_PATH="${CFPR_VK_GL_CTS_PATH:-$CFPR_BASE_PATH/vk-gl-cts.git}"
 CFPR_PIGLIT_PATH="${CFPR_PIGLIT_PATH:-$CFPR_BASE_PATH/piglit.git}"
+
+
+# What tests to run?
+# ------------------
+
+CFPR_RUN_VK_CTS="${CFPR_RUN_VK_CTS:-false}"
+CFPR_RUN_PIGLIT="${CFPR_RUN_PIGLIT:-false}"
 
 
 # Force clean
@@ -495,60 +624,6 @@ fi
 # Running wrapped ...
 # -------------------
 
-header
+run_tests
 
-export VK_ICD_FILENAMES="$CFPR_BASE_PATH/install/share/vulkan/icd.d/intel_icd.x86_64.json"
-
-mkdir -p "$CFPR_TEMP_PATH/jail"
-
-pushd "$CFPR_TEMP_PATH/jail"
-
-build_mesa true
-clean_mesa
-
-printf "%s\n" "" "Checking for regressions in piglit ..." "" >&2
-
-build_piglit
-
-$HOME/mesa-resources.git/testing/full-piglit-run.sh \
-    --verbosity "$CFPR_VERBOSITY" \
-    --driver i965 \
-    --commit "$CFPR_MESA_COMMIT" \
-    --base-path "$CFPR_BASE_PATH" \
-    --piglit-path "$CFPR_TEMP_PATH/piglit" \
-    --run-piglit
-
-create_piglit_reference
-
-build_mesa false
-clean_mesa
-
-$HOME/mesa-resources.git/testing/full-piglit-run.sh \
-    --verbosity "$CFPR_VERBOSITY" \
-    --create-piglit-report \
-    --driver i965 \
-    --commit "$CFPR_MESA_COMMIT" \
-    --base-path "$CFPR_BASE_PATH" \
-    --piglit-path "$CFPR_TEMP_PATH/piglit" \
-    --run-piglit
-
-clean_piglit
-
-printf "%s\n" "" "Checking VK CTS progress ..." "" >&2
-
-build_vk_gl_cts
-
-$HOME/mesa-resources.git/testing/full-piglit-run.sh \
-    --verbosity "$CFPR_VERBOSITY" \
-    --create-piglit-report \
-    --driver anv \
-    --commit "$CFPR_MESA_COMMIT" \
-    --base-path "$CFPR_BASE_PATH" \
-    --vk-gl-cts-path "$CFPR_TEMP_PATH/vk-gl-cts/build" \
-    --run-vk-cts \
-    --invert-optional-patterns
-
-clean_vk_gl_cts
-
-popd
-rm -rf "$CFPR_TEMP_PATH/"
+exit $?
