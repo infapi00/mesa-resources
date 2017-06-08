@@ -15,6 +15,28 @@ DISPLAY="${DISPLAY:-:0.0}"
 export -p DISPLAY
 
 #------------------------------------------------------------------------------
+#			Function: check_verbosity
+#------------------------------------------------------------------------------
+#
+# perform sanity check on the passed verbosity level:
+#   $1 - the verbosity to use
+# returns:
+#   0 is success, an error code otherwise
+function check_verbosity() {
+    case "x$1" in
+	"xfull" | "xnormal" | "xquiet" )
+	    ;;
+	*)
+	    printf "%s\n" "Error: Only verbosity levels among [full|normal|quiet] are allowed." >&2
+	    usage
+	    return 1
+	    ;;
+    esac
+
+    return 0
+}
+
+#------------------------------------------------------------------------------
 #			Function: check_driver
 #------------------------------------------------------------------------------
 #
@@ -27,7 +49,7 @@ function check_driver() {
 	"xi965" | "xnouveau" | "xnvidia" | "xradeon" | "xamd"  | "xllvmpipe" | "xswr" | "xsoftpipe" | "xanv" | "xradv" )
 	    ;;
 	*)
-	    printf "\nA driver among [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe|anv|radv] has to be provided.\n"
+	    printf "%s\n" "Error: A driver among [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe|anv|radv] has to be provided." >&2
 	    usage
 	    return 1
 	    ;;
@@ -53,7 +75,7 @@ function check_option_args() {
 
     # check for an argument
     if [ x"$arg" = x ]; then
-	printf "\nError: the '$option' option is missing its required argument.\n"
+	printf "%s\n" "Error: the '$option' option is missing its required argument." >&2
 	usage
 	exit 2
     fi
@@ -61,7 +83,7 @@ function check_option_args() {
     # does the argument look like an option?
     echo $arg | $FPR_GREP "^-" > /dev/null
     if [ $? -eq 0 ]; then
-	printf "\nError: the argument '$arg' of option '$option' looks like an option itself.\n"
+	printf "%s\n" "Error: the argument '$arg' of option '$option' looks like an option itself." >&2
 	usage
 	exit 3
     fi
@@ -79,7 +101,7 @@ function check_option_args() {
 #   0 is success, an error code otherwise
 function generate_pattern {
     if [ ! -f "$FPR_PATTERNS_FILE" ]; then
-	printf "\nThe patterns file: \"$FPR_PATTERNS_FILE\" doesn't exist.\n" >&2
+	printf "%s\n" "Error: the patterns file: \"$FPR_PATTERNS_FILE\" doesn't exist." >&2
 	usage
 	return 12
     fi
@@ -108,30 +130,49 @@ function generate_pattern {
 # returns:
 #   0 is success, an error code otherwise
 function inner_run_tests {
-    printf "\n" >&"${FPR_OUTPUT}" 2>&1
-    test "x$FPR_INNER_RUN_MESSAGE" = "x" || printf "$FPR_INNER_RUN_MESSAGE " >&"${FPR_OUTPUT}" 2>&1
-    printf "$FPR_PIGLIT_PATH/piglit run $FPR_INNER_RUN_SET $FPR_INNER_RUN_PARAMETERS -n $FPR_INNER_RUN_NAME $FPR_INNER_RUN_RESULTS\n" >&"${FPR_OUTPUT}" 2>&1
+    printf "%s\n" ""
+    test "x$FPR_INNER_RUN_MESSAGE" = "x" || printf "$FPR_INNER_RUN_MESSAGE "
+    printf "%s\n" "$FPR_PIGLIT_PATH/piglit run $FPR_INNER_RUN_SET $FPR_INNER_RUN_PARAMETERS -n $FPR_INNER_RUN_NAME $FPR_INNER_RUN_RESULTS"
     $FPR_DRY_RUN && return 0
-    "$FPR_PIGLIT_PATH"/piglit run $FPR_INNER_RUN_SET $FPR_INNER_RUN_PARAMETERS -n "$FPR_INNER_RUN_NAME" "$FPR_INNER_RUN_RESULTS" >&"${FPR_OUTPUT}" 2>&1
+    "$FPR_PIGLIT_PATH"/piglit run $FPR_INNER_RUN_SET $FPR_INNER_RUN_PARAMETERS -n "$FPR_INNER_RUN_NAME" "$FPR_INNER_RUN_RESULTS"
     if [ $? -ne 0 ]; then
 	return 9
     fi
     if $FPR_CREATE_PIGLIT_REPORT; then
-	printf "\n$FPR_PIGLIT_PATH/piglit summary console -d $FPR_INNER_RUN_REFERENCE $FPR_INNER_RUN_RESULTS\n" >&"${FPR_OUTPUT}" 2>&1
+	printf "%s\n" "" "$FPR_PIGLIT_PATH/piglit summary console -d $FPR_INNER_RUN_REFERENCE $FPR_INNER_RUN_RESULTS" ""
 	FPR_INNER_SUMMARY=$("$FPR_PIGLIT_PATH"/piglit summary console -d "$FPR_INNER_RUN_REFERENCE" "$FPR_INNER_RUN_RESULTS")
 	if [ $? -ne 0 ]; then
 	    return 10
 	fi
 	read -ra FPR_INNER_RESULTS <<< $(echo "$FPR_INNER_SUMMARY" | $FPR_GREP ^regressions)
 	if [ "x${FPR_INNER_RESULTS[2]}" != "x0" ]; then
-	    printf "\n%s\n" "Run name: $FPR_INNER_RUN_NAME" "$FPR_INNER_SUMMARY"
-	    printf "\nRegressions: ${FPR_INNER_RESULTS[2]}" >&"${FPR_OUTPUT}" 2>&1
-	    printf "\n${FPR_PIGLIT_PATH}/piglit summary html -o -e pass $FPR_INNER_RUN_SUMMARY $FPR_INNER_RUN_REFERENCE $FPR_INNER_RUN_RESULTS\n" >&"${FPR_OUTPUT}" 2>&1
-	    "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "$FPR_INNER_RUN_SUMMARY" "$FPR_INNER_RUN_REFERENCE" "$FPR_INNER_RUN_RESULTS" > /dev/null 2>&1
+	    printf "%s\n" \
+		   "" \
+		   "Run name: $FPR_INNER_RUN_NAME" \
+		   "" \
+		   "$FPR_INNER_SUMMARY" \
+		   "" \
+		   "Regressions: ${FPR_INNER_RESULTS[2]}" \
+		   "" >&2
+	    printf "%s\n" \
+		   "" \
+		   "${FPR_PIGLIT_PATH}/piglit summary html -o -e pass $FPR_INNER_RUN_SUMMARY $FPR_INNER_RUN_REFERENCE $FPR_INNER_RUN_RESULTS" \
+		   ""
+	    "${FPR_PIGLIT_PATH}"/piglit summary html -o -e pass "$FPR_INNER_RUN_SUMMARY" "$FPR_INNER_RUN_REFERENCE" "$FPR_INNER_RUN_RESULTS"
 	    if [ $? -ne 0 ]; then
 		return 11
 	    fi
+	else
+	    printf "%s\n" \
+		   "" \
+		   "No regressions detected in run: $FPR_INNER_RUN_NAME" \
+		   "" >&2
 	fi
+    else
+	printf "%s\n" \
+	       "" \
+	       "Results created for run: $FPR_INNER_RUN_NAME" \
+	       "" >&2
     fi
 
     return 0
@@ -146,7 +187,7 @@ function inner_run_tests {
 #   0 is success, an error code otherwise
 function run_tests {
     if [ "${FPR_MESA_COMMIT:-x}" == "x" ]; then
-	printf "\nA commit id has to be provided.\n"
+	printf "%s\n" "Error: a commit id has to be provided." >&2
 	usage
 	return 4
     fi
@@ -171,7 +212,7 @@ function run_tests {
 	VK_GL_CTS_COMMIT=$(git show --pretty=format:"%h" --no-patch)
 	cd - > /dev/null
 	if [ "x${VK_GL_CTS_COMMIT}" = "x" ]; then
-	    printf "\nCouldn\'t get vk-gl-cts\'s commit ID\n"
+	    printf "%s\n" "Error: Couldn\'t get vk-gl-cts\'s commit ID" >&2
 	    return 6
 	fi
     fi
@@ -181,7 +222,7 @@ function run_tests {
 	DEQP_COMMIT=$(git show --pretty=format:"%h" --no-patch)
 	cd - > /dev/null
 	if [ "x${DEQP_COMMIT}" = "x" ]; then
-	    printf "\nCouldn\'t get dEQP\'s commit ID\n"
+	    printf "%s\n" "Error: Couldn\'t get dEQP\'s commit ID" >&2
 	    return 7
 	fi
     fi
@@ -191,7 +232,7 @@ function run_tests {
 	PIGLIT_COMMIT=$(git show --pretty=format:"%h" --no-patch)
 	cd - > /dev/null
 	if [ "x${PIGLIT_COMMIT}" = "x" ]; then
-	    printf "\nCouldn\'t get piglit\'s commit ID\n"
+	    printf "%s\n" "Error: Couldn\'t get piglit\'s commit ID" >&2
 	    return 8
 	fi
     fi
@@ -389,7 +430,7 @@ Usage: $basename [options] --driver [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr
 
 Options:
   --dry-run                   Does everything except running the tests
-  --verbose                   Be verbose
+  --verbosity                 Which verbosity level to use [full|normal|quite]. Default, normal.
   --help                      Display this help and exit successfully
   --driver                    Which driver with which to run the tests [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe|anv|radv]
   --commit                    Mesa commit to output
@@ -443,9 +484,11 @@ do
     --dry-run)
 	FPR_DRY_RUN=true
 	;;
-    # Be verbose
-    --verbose)
-	FPR_VERBOSE=true
+    # Which verbosity level to use [full|normal|quite]. Default, normal.
+    --verbosity)
+	check_option_args $1 $2
+	shift
+	FPR_VERBOSITY=$1
 	;;
     # Display this help and exit successfully
     --help)
@@ -585,17 +628,17 @@ do
 	FPR_RUN_VK_CTS_ALL_CONCURRENT=true
 	;;
     --*)
-	printf "\nError: unknown option: $1.\n"
+	printf "%s\n" "Error: unknown option: $1" >&2
 	usage
 	exit 1
 	;;
     -*)
-	printf "\nError: unknown option: $1.\n"
+	printf "%s\n" "Error: unknown option: $1" >&2
 	usage
 	exit 1
 	;;
     *)
-	printf "\nError: unknown extra parameter: $1.\n"
+	printf "%s\n" "Error: unknown extra parameter: $1" >&2
 	usage
 	exit 1
 	;;
@@ -641,12 +684,19 @@ FPR_RUN_VK_CTS_ALL_CONCURRENT="${FPR_RUN_VK_CTS_ALL_CONCURRENT:-false}"
 # Verbose?
 # --------
 
-FPR_VERBOSE="${FPR_VERBOSE:-false}"
+FPR_VERBOSITY="${FPR_VERBOSITY:-normal}"
 
-if ${FPR_VERBOSE}; then
-    FPR_OUTPUT=1
-else
-    FPR_OUTPUT=/dev/null
+check_verbosity $FPR_VERBOSITY
+if [ $? -ne 0 ]; then
+    return 13
+fi
+
+if [ "x$FPR_VERBOSITY" != "xfull" ]; then
+    exec > /dev/null
+fi
+
+if [ "x$FPR_VERBOSITY" == "xquiet" ]; then
+    exec 2>&1
 fi
 
 # dry run?
