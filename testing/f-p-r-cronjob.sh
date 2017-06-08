@@ -193,6 +193,7 @@ function create_piglit_reference() {
 # returns:
 #   0 is success, an error code otherwise
 function clean_piglit() {
+    rm -rf "$CFPR_TEMP_PATH/piglit"
     pushd "$CFPR_PIGLIT_PATH"
     git worktree prune
     git branch -D cfpr
