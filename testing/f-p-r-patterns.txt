@@ -1,0 +1,6 @@
+forced-exclusion-i965-piglit: texcombine texCombine
+forced-exclusion-llvmpipe-piglit: texcombine texCombine
+forced-exclusion-swr-piglit: texcombine texCombine
+forced-exclusion-softpipe-piglit: texcombine texCombine
+optional-exclusion-i965-piglit: arb_post_depth_coverage-multisampling arb_post_depth_coverage-sample-shading
+optional-exclusion-swr-piglit: glx-multi-context-ib-1
