@@ -19,6 +19,31 @@ export -p DISPLAY
 MAKEFLAGS=-j$(getconf _NPROCESSORS_ONLN)
 export MAKEFLAGS
 
+
+#------------------------------------------------------------------------------
+#			Function: backup_redirection
+#------------------------------------------------------------------------------
+#
+# backups current stout and sterr file handlers
+function backup_redirection() {
+        exec 7>&1            # Backup stout.
+        exec 8>&2            # Backup sterr.
+        exec 9>&1            # New handler for stout when we actually want it.
+}
+
+
+#------------------------------------------------------------------------------
+#			Function: restore_redirection
+#------------------------------------------------------------------------------
+#
+# restores previously backed up stout and sterr file handlers
+function restore_redirection() {
+        exec 1>&7 7>&-       # Restore stout.
+        exec 2>&8 8>&-       # Restore sterr.
+        exec 9>&-            # Closing open handler.
+}
+
+
 #------------------------------------------------------------------------------
 #			Function: check_verbosity
 #------------------------------------------------------------------------------
@@ -32,13 +57,34 @@ function check_verbosity() {
 	"xfull" | "xnormal" | "xquiet" )
 	    ;;
 	*)
-	    printf "Error: Only verbosity levels among [full|normal|quiet] are allowed.\n" >&2
+	    printf "%s\n" "Error: Only verbosity levels among [full|normal|quiet] are allowed." >&2
 	    usage
 	    return 1
 	    ;;
     esac
 
     return 0
+}
+
+
+#------------------------------------------------------------------------------
+#			Function: apply_verbosity
+#------------------------------------------------------------------------------
+#
+# applies the passed verbosity level to the output:
+#   $1 - the verbosity to use
+function apply_verbosity() {
+
+    backup_redirection
+
+    if [ "x$1" != "xfull" ]; then
+	exec 1>/dev/null
+    fi
+
+    if [ "x$1" == "xquiet" ]; then
+	exec 2>/dev/null
+	exec 9>/dev/null
+    fi
 }
 
 
@@ -141,7 +187,7 @@ function sanity_check() {
 function header {
     CFPR_TIMESTAMP=$(date +%Y%m%d%H%M%S)
     CFPR_SPACE=$(df -h)
-    printf "%s\n" "Running $1 at $CFPR_TIMESTAMP" "" "$CFPR_SPACE" "" >&2
+    printf "%s\n" "Running $1 at $CFPR_TIMESTAMP" "" "$CFPR_SPACE" "" >&9
 
     return 0
 }
@@ -338,7 +384,7 @@ function run_tests {
     pushd "$CFPR_TEMP_PATH/jail"
 
     if $CFPR_RUN_PIGLIT; then
-	printf "%s\n" "" "Checking for regressions in piglit ..." "" >&2
+	printf "%s\n" "" "Checking for regressions in piglit ..." "" >&9
 
 	build_mesa true
 	clean_mesa
@@ -375,7 +421,7 @@ function run_tests {
     fi
 
     if $CFPR_RUN_VK_CTS; then
-	printf "%s\n" "" "Checking VK CTS progress ..." "" >&2
+	printf "%s\n" "" "Checking VK CTS progress ..." "" >&9
 
 	build_vk_gl_cts
 
@@ -607,19 +653,12 @@ fi
 
 CFPR_VERBOSITY="${CFPR_VERBOSITY:-normal}"
 
-check_verbosity $CFPR_VERBOSITY
+check_verbosity "$CFPR_VERBOSITY"
 if [ $? -ne 0 ]; then
     exit 13
 fi
 
-if [ "x$CFPR_VERBOSITY" != "xfull" ]; then
-    exec > /dev/null
-fi
-
-if [ "x$CFPR_VERBOSITY" == "xquiet" ]; then
-    exec 2>&1
-fi
-
+apply_verbosity "$CFPR_VERBOSITY"
 
 # Running wrapped ...
 # -------------------

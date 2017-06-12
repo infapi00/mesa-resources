@@ -14,6 +14,31 @@ PATH=${HOME}/.local/bin$(echo :$PATH | sed -e s@:${HOME}/.local/bin@@g)
 DISPLAY="${DISPLAY:-:0.0}"
 export -p DISPLAY
 
+
+#------------------------------------------------------------------------------
+#			Function: backup_redirection
+#------------------------------------------------------------------------------
+#
+# backups current stout and sterr file handlers
+function backup_redirection() {
+        exec 7>&1            # Backup stout.
+        exec 8>&2            # Backup sterr.
+        exec 9>&1            # New handler for stout when we actually want it.
+}
+
+
+#------------------------------------------------------------------------------
+#			Function: restore_redirection
+#------------------------------------------------------------------------------
+#
+# restores previously backed up stout and sterr file handlers
+function restore_redirection() {
+        exec 1>&7 7>&-       # Restore stout.
+        exec 2>&8 8>&-       # Restore sterr.
+        exec 9>&-            # Closing open handler.
+}
+
+
 #------------------------------------------------------------------------------
 #			Function: check_verbosity
 #------------------------------------------------------------------------------
@@ -35,6 +60,28 @@ function check_verbosity() {
 
     return 0
 }
+
+
+#------------------------------------------------------------------------------
+#			Function: apply_verbosity
+#------------------------------------------------------------------------------
+#
+# applies the passed verbosity level to the output:
+#   $1 - the verbosity to use
+function apply_verbosity() {
+
+    backup_redirection
+
+    if [ "x$1" != "xfull" ]; then
+	exec 1>/dev/null
+    fi
+
+    if [ "x$1" == "xquiet" ]; then
+	exec 2>/dev/null
+	exec 9>/dev/null
+    fi
+}
+
 
 #------------------------------------------------------------------------------
 #			Function: check_driver
@@ -131,8 +178,8 @@ function generate_pattern {
 #   0 is success, an error code otherwise
 function inner_run_tests {
     printf "%s\n" ""
-    test "x$FPR_INNER_RUN_MESSAGE" = "x" || printf "$FPR_INNER_RUN_MESSAGE "
-    printf "%s\n" "$FPR_PIGLIT_PATH/piglit run $FPR_INNER_RUN_SET $FPR_INNER_RUN_PARAMETERS -n $FPR_INNER_RUN_NAME $FPR_INNER_RUN_RESULTS"
+    test "x$FPR_INNER_RUN_MESSAGE" = "x" || printf "$FPR_INNER_RUN_MESSAGE " >&9
+    printf "%s\n" "$FPR_PIGLIT_PATH/piglit run $FPR_INNER_RUN_SET $FPR_INNER_RUN_PARAMETERS -n $FPR_INNER_RUN_NAME $FPR_INNER_RUN_RESULTS" >&9
     $FPR_DRY_RUN && return 0
     "$FPR_PIGLIT_PATH"/piglit run $FPR_INNER_RUN_SET $FPR_INNER_RUN_PARAMETERS -n "$FPR_INNER_RUN_NAME" "$FPR_INNER_RUN_RESULTS"
     if [ $? -ne 0 ]; then
@@ -153,7 +200,7 @@ function inner_run_tests {
 		   "$FPR_INNER_SUMMARY" \
 		   "" \
 		   "Regressions: ${FPR_INNER_RESULTS[2]}" \
-		   "" >&2
+		   "" >&9
 	    printf "%s\n" \
 		   "" \
 		   "${FPR_PIGLIT_PATH}/piglit summary html -o -e pass $FPR_INNER_RUN_SUMMARY $FPR_INNER_RUN_REFERENCE $FPR_INNER_RUN_RESULTS" \
@@ -166,13 +213,13 @@ function inner_run_tests {
 	    printf "%s\n" \
 		   "" \
 		   "No regressions detected in run: $FPR_INNER_RUN_NAME" \
-		   "" >&2
+		   "" >&9
 	fi
     else
 	printf "%s\n" \
 	       "" \
 	       "Results created for run: $FPR_INNER_RUN_NAME" \
-	       "" >&2
+	       "" >&9
     fi
 
     return 0
@@ -686,18 +733,12 @@ FPR_RUN_VK_CTS_ALL_CONCURRENT="${FPR_RUN_VK_CTS_ALL_CONCURRENT:-false}"
 
 FPR_VERBOSITY="${FPR_VERBOSITY:-normal}"
 
-check_verbosity $FPR_VERBOSITY
+check_verbosity "$FPR_VERBOSITY"
 if [ $? -ne 0 ]; then
     return 13
 fi
 
-if [ "x$FPR_VERBOSITY" != "xfull" ]; then
-    exec > /dev/null
-fi
-
-if [ "x$FPR_VERBOSITY" == "xquiet" ]; then
-    exec 2>&1
-fi
+apply_verbosity "$FPR_VERBOSITY"
 
 # dry run?
 # --------
