@@ -339,11 +339,27 @@ function run_tests {
     fi
 
     if $FPR_RUN_GL_CTS; then
-	export -p PIGLIT_CTS_GL_BIN="${FPR_VK_GL_CTS_BUILD_PATH}"/external/openglcts/modules/glcts
+	FPR_RUN_GL_CTS_DIR="${FPR_VK_GL_CTS_BUILD_PATH}"/external/openglcts/modules
+	FPR_RUN_GL_CTS_BIN=glcts
 	export -p MESA_GLES_VERSION_OVERRIDE=3.2
 	export -p MESA_GL_VERSION_OVERRIDE=4.5
 	export -p MESA_GLSL_VERSION_OVERRIDE=450
-	FPR_INNER_RUN_SET=cts_gl45
+	cd "$FPR_RUN_GL_CTS_DIR"
+	./"$FPR_RUN_GL_CTS_BIN" --deqp-runmode=txt-caselist --deqp-case=KHR-GL30 | $FPR_GREP KHR-GL30 > /dev/null
+	if [ $? -eq 0 ] && [ -f "$FPR_PIGLIT_PATH/tests/khr_gl45.py" ]; then
+	    FPR_INNER_RUN_SET=khr_gl45
+	    export -p PIGLIT_KHR_GL_BIN="$FPR_RUN_GL_CTS_DIR"/"$FPR_RUN_GL_CTS_BIN"
+	    FPR_INNER_RUN_MESSAGE=" \
+			      PIGLIT_KHR_GL_BIN=\"$PIGLIT_KHR_GL_BIN\" \
+			      PIGLIT_KHR_GL_EXTRA_ARGS=\"$PIGLIT_KHR_GL_EXTRA_ARGS\""
+	else
+	    FPR_INNER_RUN_SET=cts_gl45
+	    export -p PIGLIT_CTS_GL_BIN="$FPR_RUN_GL_CTS_DIR"/"$FPR_RUN_GL_CTS_BIN"
+	    FPR_INNER_RUN_MESSAGE=" \
+			      PIGLIT_CTS_GL_BIN=\"$PIGLIT_CTS_GL_BIN\" \
+			      PIGLIT_CTS_GL_EXTRA_ARGS=\"$PIGLIT_CTS_GL_EXTRA_ARGS\""
+	fi
+	cd -
 	FPR_INNER_RUN_PARAMETERS="$(generate_pattern gl-cts)"
 	if [ $? -ne 0 ]; then
 	    return $?
@@ -353,8 +369,7 @@ function run_tests {
 	FPR_INNER_RUN_REFERENCE=$GL_CTS_REFERENCE
 	FPR_INNER_RUN_SUMMARY=$GL_CTS_SUMMARY
 	FPR_INNER_RUN_MESSAGE=" \
-			      PIGLIT_CTS_GL_BIN=\"$PIGLIT_CTS_GL_BIN\" \
-			      PIGLIT_CTS_GL_EXTRA_ARGS=\"$PIGLIT_CTS_GL_EXTRA_ARGS\" \
+			      $FPR_INNER_RUN_MESSAGE \
 			      MESA_GLES_VERSION_OVERRIDE=\"$MESA_GLES_VERSION_OVERRIDE\" \
 			      MESA_GL_VERSION_OVERRIDE=\"$MESA_GL_VERSION_OVERRIDE\" \
 			      MESA_GLSL_VERSION_OVERRIDE=\"$MESA_GLSL_VERSION_OVERRIDE\""
@@ -362,6 +377,9 @@ function run_tests {
 	if [ $? -ne 0 ]; then
 	    return $?
 	fi
+        unset FPR_RUN_GL_CTS_DIR
+        unset FPR_RUN_GL_CTS_BIN
+        unset PIGLIT_KHR_GL_BIN
         unset PIGLIT_CTS_GL_BIN
         unset MESA_GLES_VERSION_OVERRIDE
         unset MESA_GLSL_VERSION_OVERRIDE
