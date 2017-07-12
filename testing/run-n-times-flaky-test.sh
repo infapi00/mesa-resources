@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# This script runs a piglit test n times, and returns how many runs
+# have passed. Useful for flaky tests.
+#
+# Syntax : run-n-times-flaky-test.sh number command
 
 if [ $# -lt 2 ]
 then

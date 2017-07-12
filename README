@@ -10,8 +10,6 @@ A brief description of what it contains:
 
  * deqp: basic stuff for deqp.
 
- * piglit: basic stuff for piglit.
-
  * testing: tools and scripts to use while testing.
 
  * gnome-session: tools to run GNOME with your desired GL driver
