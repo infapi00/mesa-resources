@@ -3,6 +3,7 @@
 export JHBUILD_MESA_ROOT="/opt/mesa"
 export MESA_RESOURCES="${JHBUILD_MESA_ROOT}/mesa-resources.git"
 export XCURSOR_PATH="/usr/share/icons"
-env GL_DRIVER="i965" \
-    "${JHBUILD_MESA_ROOT}"/jhbuild-install/bin/jhbuild -f "${MESA_RESOURCES}"/jhbuild/jhbuildrc-basic run gnome-session --session jhbuild-mesa-gnome "$@"
-
+env LD_LIBRARY_PATH=${JHBUILD_MESA_ROOT}/i965/install/lib/ \
+    LIBGL_DRIVERS_PATH=${JHBUILD_MESA_ROOT}/i965/install/lib/dri/ \
+    VK_ICD_FILENAMES=${JHBUILD_MESA_ROOT}/i965/mesa/src/intel/vulkan/dev_icd.json \
+    gnome-session --session jhbuild-mesa-gnome "$@"
