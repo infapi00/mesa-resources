@@ -15,3 +15,5 @@ optional-exclusion-swr-piglit: ext_transform_feedback-immediate-reuse-index-buff
 optional-exclusion-swr-piglit: fs-op-ne-bvec4-bvec4 fs-op-ne-bvec4-bvec4-using-if fs-op-eq-bvec4-bvec4 fs-op-eq-bvec4-bvec4-using-if vs-op-selection-bool-bvec4-bvec4 vs-op-eq-bvec4-bvec4-using-if
 optional-exclusion-swr-piglit: tex-miplevel-selection
 optional-exclusion-swr-piglit: fs-clamp-int-int-int vs-clamp-int-int-int
+optional-exclusion-i965-gl-cts: program_interface_query.*invalid-enum
+optional-exclusion-i965-gl-cts: shader_subroutine.*ssbo_atomic_image_load_store
