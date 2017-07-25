@@ -17,3 +17,6 @@ optional-exclusion-swr-piglit: tex-miplevel-selection
 optional-exclusion-swr-piglit: fs-clamp-int-int-int vs-clamp-int-int-int
 optional-exclusion-i965-gl-cts: program_interface_query.*invalid-enum
 optional-exclusion-i965-gl-cts: shader_subroutine.*ssbo_atomic_image_load_store
+optional-exclusion-i965-piglit: glx-oml-sync-control-timing glx-copy-sub-buffer glx-multithread-texture
+optional-exclusion-i965-piglit: arb_query_buffer_object-qbo
+optional-exclusion-i965-piglit: ext_framebuffer_multisample-accuracy
