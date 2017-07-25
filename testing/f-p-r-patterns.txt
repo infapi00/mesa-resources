@@ -10,3 +10,8 @@ optional-exclusion-i965-piglit: ext_timer_query-time-elapsed
 optional-exclusion-i965-piglit: layer-gs-writes-in-range
 optional-exclusion-swr-piglit: glx-multi-context-ib-1
 optional-exclusion-swr-piglit: streaming-texture-leak
+optional-exclusion-swr-piglit: amd_shader_trinary_minmax.*fs-mid3-ivec2-ivec2-ivec2 amd_shader_trinary_minmax.*vs-min3-ivec2-ivec2-ivec2 amd_shader_trinary_minmax.*fs-min3-int-int-int amd_shader_trinary_minmax.*vs-max3-int-int-int amd_shader_trinary_minmax.*fs-mid3-int-int-int amd_shader_trinary_minmax.*vs-min3-int-int-int
+optional-exclusion-swr-piglit: ext_transform_feedback-immediate-reuse-index-buffer
+optional-exclusion-swr-piglit: fs-op-ne-bvec4-bvec4 fs-op-ne-bvec4-bvec4-using-if fs-op-eq-bvec4-bvec4 fs-op-eq-bvec4-bvec4-using-if vs-op-selection-bool-bvec4-bvec4 vs-op-eq-bvec4-bvec4-using-if
+optional-exclusion-swr-piglit: tex-miplevel-selection
+optional-exclusion-swr-piglit: fs-clamp-int-int-int vs-clamp-int-int-int
