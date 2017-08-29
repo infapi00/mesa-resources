@@ -23,3 +23,4 @@ optional-exclusion-i965-piglit: ext_framebuffer_multisample-accuracy
 optional-exclusion-anv-vk-cts: render_to_image.*2d_array.*huge.*layers
 optional-exclusion-softpipe-piglit: triangle-rasterization
 optional-exclusion-llvmpipe-piglit: glx-multithread-shader-compile
+optional-exclusion-swr-piglit: ext_transform_feedback.*immediate-reuse-index-buffer stencil-twoside ext_texture_array.*maxlayers bound-resource-limits
