@@ -21,3 +21,4 @@ optional-exclusion-i965-piglit: glx-oml-sync-control-timing glx-copy-sub-buffer 
 optional-exclusion-i965-piglit: arb_query_buffer_object-qbo
 optional-exclusion-i965-piglit: ext_framebuffer_multisample-accuracy
 optional-exclusion-anv-vk-cts: render_to_image.*2d_array.*huge.*layers
+optional-exclusion-softpipe-piglit: triangle-rasterization
