@@ -147,6 +147,10 @@ function check_option_args() {
 # returns:
 #   0 is success, an error code otherwise
 function generate_pattern {
+    # Ugly, but we will like to break long lines ...
+    FPR_NEW_LINE="
+"
+
     if [ ! -f "$FPR_PATTERNS_FILE" ]; then
 	printf "%s\n" "Error: the patterns file: \"$FPR_PATTERNS_FILE\" doesn't exist." >&2
 	usage
@@ -155,16 +159,16 @@ function generate_pattern {
     if $FPR_GENERATE_FORCED_PATTERN; then
 	FPR_FORCED_PATTERN_TOKEN=$(($FPR_INVERT_FORCED_PATTERN && echo "-t") || echo "-x")
 	for i in $($FPR_GREP $FPR_GL_DRIVER "$FPR_PATTERNS_FILE" | $FPR_GREP $1 | $FPR_GREP "forced-exclusion" | cut -d : -f 2); do
-	    FPR_PATTERNS_PARAMETERS="$FPR_FORCED_PATTERN_TOKEN $i $FPR_PATTERNS_PARAMETERS"
+	    FPR_PATTERNS_PARAMETERS="$FPR_FORCED_PATTERN_TOKEN $i "$FPR_NEW_LINE"$FPR_PATTERNS_PARAMETERS"
 	done
     fi
     if $FPR_GENERATE_OPTIONAL_PATTERN; then
 	FPR_OPTIONAL_PATTERN_TOKEN=$(($FPR_INVERT_OPTIONAL_PATTERN && echo "-t") || echo "-x")
 	for i in $($FPR_GREP $FPR_GL_DRIVER "$FPR_PATTERNS_FILE" | $FPR_GREP $1 | $FPR_GREP "optional-exclusion" | cut -d : -f 2); do
-	    FPR_PATTERNS_PARAMETERS="$FPR_OPTIONAL_PATTERN_TOKEN $i $FPR_PATTERNS_PARAMETERS"
+	    FPR_PATTERNS_PARAMETERS="$FPR_OPTIONAL_PATTERN_TOKEN $i "$FPR_NEW_LINE"$FPR_PATTERNS_PARAMETERS"
 	done
     fi
-    echo $FPR_PATTERNS_PARAMETERS
+    echo "$FPR_PATTERNS_PARAMETERS"
 
     return 0
 }
