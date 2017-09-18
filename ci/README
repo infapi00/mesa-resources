@@ -1,0 +1,3 @@
+These scripts allow to do different actions that help on daily CI
+tasks. For example, you can mirror a list of branches in a personal
+repository from an upstream repository.

@@ -1,9 +1,10 @@
-mesa-resources: Basic stuff, scripts, and so on used when hacking on mesa
+mesa-resources: Basic stuff, scripts, and so on used when hacking on
+mesa.
 
 A brief description of what it contains:
 
  * jhbuild: a custom moduleset, and a template jhbuildrc file for mesa
-   and piglit building
+   and piglit building.
 
  * install-basic-dependencies.sh: script that install the basic system
    dependencies for working on mesa.
@@ -12,4 +13,6 @@ A brief description of what it contains:
 
  * testing: tools and scripts to use while testing.
 
- * gnome-session: tools to run GNOME with your desired GL driver
+ * gnome-session: tools to run GNOME with your desired GL driver.
+
+ * ci: tools to help with continuous integration.
