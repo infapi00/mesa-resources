@@ -6,7 +6,7 @@
 #
 # Run:
 #
-# $ ./update-ci-branch.sh --origin <url-origin-git-repository> --origin-branch <origin-repository-ci-branch> --upstream  <url-upstream-git-repository>
+# $ ./update-ci-branch.sh --origin <url-origin-git-repository> --origin-branch <origin-repository-ci-branch> --upstream  <url-upstream-git-repository> --apply-changes-script <apply-chagnes-script>
 
 
 export LC_ALL=C
@@ -121,21 +121,9 @@ function check_option_args() {
 # returns:
 #   0 is success, an error code otherwise
 function apply_changes {
-    UCB_TMP_FILE=$(mktemp)
-    cat <<CHANGES | cat - .travis.yml > $UCB_TMP_FILE
-notifications:
-  email:
-    recipients:
-      - jasuarez+mesa-travis@igalia.com
-      - tanty+mesa-travis@igalia.com
 
-CHANGES
+source $UCB_APPLY_CHANGES_SCRIPT
 
-    cat $UCB_TMP_FILE > .travis.yml
-    rm  $UCB_TMP_FILE
-
-    git add .travis.yml
-    git commit -m "travis: added notifications"
 }
 
 #------------------------------------------------------------------------------
@@ -168,6 +156,12 @@ function update_branch {
 	printf "%s\n" "Error: master cannot be the origin branch." >&2
 	usage
 	return 7
+    fi
+
+    if [ "${UCB_APPLY_CHANGES_SCRIPT:-x}" == "x" ]; then
+	printf "%s\n" "Error: a script that will make the changes has to be provided." >&2
+	usage
+	return 8
     fi
 
     mkdir -p "$UCB_TEMP_PATH"
@@ -212,7 +206,7 @@ function usage() {
     basename="`expr "//$0" : '.*/\([^/]*\)'`"
     cat <<HELP
 
-Usage: $basename [options] --origin <url-origin-git-repository> --origin-branch <origin-repository-ci-branch> --upstream  <url-upstream-git-repository>
+Usage: $basename [options] --origin <url-origin-git-repository> --origin-branch <origin-repository-ci-branch> --upstream  <url-upstream-git-repository> --apply-changes-script <apply-chagnes-script>
 
 Options:
   --dry-run                   Does everything except running the tests
@@ -223,6 +217,7 @@ Options:
   --origin-branch             The name of the branch in the origin repository to be updated
   --upstream                  The URL of the upstream git repository from which to update
   --upstream-branch           The name of the branch in the upstream repository from which to update
+  --apply-changes-script      The full path to the "apply changes script"
 
 HELP
 }
@@ -289,6 +284,12 @@ do
 	check_option_args $1 $2
 	shift
 	UCB_UPSTREAM_BRANCH=$1
+	;;
+    # The full path to the "apply changes script"
+    --apply-changes-script)
+	check_option_args $1 $2
+	shift
+	UCB_APPLY_CHANGES_SCRIPT=$1
 	;;
     --*)
 	printf "%s\n" "Error: unknown option: $1" >&2
