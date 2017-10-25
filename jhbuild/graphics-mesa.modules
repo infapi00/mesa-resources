@@ -65,10 +65,6 @@
     <branch repo="xorg-lib"/>
   </autotools>
 
-  <autotools id="wayland-protocols">
-    <branch repo="wayland"/>
-  </autotools>
-
   <autotools id="mesa" skip-autogen="never" autogenargs="--enable-gles2 --disable-gallium-egl --with-platforms=x11,drm --enable-gbm --enable-shared-glapi">
     <branch repo="mesa" branch="9.1"/>
     <dependencies>
@@ -76,6 +72,7 @@
       <dep package="libX11"/>
       <dep package="libxcb"/>
       <dep package="libxshmfence"/>
+      <dep package="wayland"/>
       <dep package="wayland-protocols"/>
     </dependencies>
   </autotools>
@@ -119,6 +116,13 @@
             hash="sha256:42c328440f60a5795835c5ec4bdfc1329e75bba16b6e22b3a87ed17e9679e8f6"
             size="267110"/>
     <dependencies>
+    </dependencies>
+  </autotools>
+
+  <autotools id="wayland-protocols">
+    <branch repo="wayland"/>
+    <dependencies>
+      <dep package="wayland"/>
     </dependencies>
   </autotools>
 
