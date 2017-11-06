@@ -25,3 +25,7 @@ optional-exclusion-softpipe-piglit: triangle-rasterization
 optional-exclusion-llvmpipe-piglit: glx-multithread-shader-compile
 optional-exclusion-swr-piglit: ext_transform_feedback.*immediate-reuse-index-buffer stencil-twoside ext_texture_array.*maxlayers bound-resource-limits
 optional-exclusion-i965-piglit: glx_arb_sync_control.*swapbuffersmsc-divisor-zero glx_arb_sync_control.*waitformsc
+optional-exclusion-i965-piglit: spec.*arb_shader_ballot.*execution.*fs-builtin-variables
+optional-exclusion-llvmpipe-piglit: spec.*arb_shader_ballot.*execution.*fs-builtin-variables
+optional-exclusion-swr-piglit: spec.*arb_shader_ballot.*execution.*fs-builtin-variables
+optional-exclusion-softpipe-piglit: spec.*arb_shader_ballot.*execution.*fs-builtin-variables
