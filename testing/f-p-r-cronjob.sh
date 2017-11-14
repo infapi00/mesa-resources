@@ -457,19 +457,21 @@ usage() {
 Usage: $basename [options] --mesa-commit <mesa-commit-id> --vk-gl-cts-commit <vk-gl-cts-commit-id> --piglit-commit <piglit-commit-id>
 
 Options:
-  --help                  Display this help and exit successfully
-  --verbosity             Which verbosity level to use [full|normal|quite]. Default, normal.
-  --force-clean           Forces the cleaning of the working env
-  --base-path             PATH from which to create the rest of the relative paths
-  --tmp-path              PATH in which to do the temporary work
-  --mesa-path             PATH to the mesa repository
-  --vk-gl-cts-path        PATH to the vk-gl-cts repository
-  --piglit-path           PATH to the piglit repository
-  --mesa-commit           mesa commit to use
-  --vk-gl-cts-commit      VK-GL-CTS commit to use
-  --piglit-commit         piglit commit to use
-  --run-vk-cts            Run vk-cts
-  --run-piglit            Run piglit
+  --help                           Display this help and exit successfully
+  --verbosity [full|normal|quite]  Which verbosity level to use
+                                   [full|normal|quite]. Default, normal.
+  --force-clean                    Forces the cleaning of the working env
+  --base-path <path>               <path> from which to create the rest of the
+                                   relative paths
+  --tmp-path <path>                <path> in which to do the temporary work
+  --mesa-path <path>               <path> to the mesa repository
+  --vk-gl-cts-path <path>          <path> to the vk-gl-cts repository
+  --piglit-path <path>             <path> to the piglit repository
+  --mesa-commit <commit>           mesa <commit> to use
+  --vk-gl-cts-commit <commit>      VK-GL-CTS <commit> to use
+  --piglit-commit <commit>         piglit <commit> to use
+  --run-vk-cts                     Run vk-cts
+  --run-piglit                     Run piglit
 
 HELP
 }
