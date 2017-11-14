@@ -498,35 +498,40 @@ function usage() {
 Usage: $basename [options] --driver [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe|anv|radv] --commit <mesa-commit-id>
 
 Options:
-  --dry-run                   Does everything except running the tests
-  --verbosity                 Which verbosity level to use [full|normal|quite]. Default, normal.
-  --help                      Display this help and exit successfully
-  --driver                    Which driver with which to run the tests [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe|anv|radv]
-  --commit                    Mesa commit to output
-  --base-path                 PATH from which to create the rest of the relative paths
-  --piglit-path               PATH to the built piglit binaries
-  --piglit-results-path       PATH to the piglit results
-  --vk-gl-cts-path            PATH to the built vk-gl-cts binaries
-  --deqp-path                 PATH to the built dEQP binaries
-  --vk-cts-prefix             Prefix to use with the vk-cts run
-  --gl-cts-prefix             Prefix to use with the gl-cts run
-  --deqp-gles2-prefix         Prefix to use with the dEQP GLES2 run
-  --deqp-gles3-prefix         Prefix to use with the dEQP GLES3 run
-  --deqp-gles31-prefix        Prefix to use with the dEQP GLES3.1 run
-  --piglit-prefix             Prefix to use with the piglit run
-  --run-vk-cts                Run vk-cts
-  --run-gl-cts                Run gl-cts
-  --run-deqp-gles2-cts        Run dEQP GLES2
-  --run-deqp-gles3-cts        Run dEQP GLES3
-  --run-deqp-gles31-cts       Run dEQP GLES31
-  --run-piglit                Run piglit
-  --create-piglit-report      Create results report
-  --patterns-file             PATH to the patterns file
-  --ignore-forced-patterns    Ignore the forced patterns
-  --ignore-optional-patterns  Ignore the optional patterns
-  --invert-forced-patterns    Invert the forced patterns
-  --invert-optional-patterns  Invert the optional patterns
-  --vk-cts-all-concurrent     Run all the vk-cts tests concurrently
+  --dry-run                        Does everything except running the tests
+  --verbosity [full|normal|quite]  Which verbosity level to use
+                                   [full|normal|quite]. Default, normal.
+  --help                           Display this help and exit successfully
+  --driver [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe|anv|radv]
+                                   Which driver with which to run the tests
+                                   [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr
+                                    |softpipe|anv|radv]
+  --commit <commit>                Mesa commit to output
+  --base-path <path>               <path> from which to create the rest of the
+                                   relative paths
+  --piglit-path <path>             <path> to the built piglit binaries
+  --piglit-results-path <path>     <path> to the piglit results
+  --vk-gl-cts-path <path>          <path> to the built vk-gl-cts binaries
+  --deqp-path <path>               <path> to the built dEQP binaries
+  --vk-cts-prefix <prefix>         <prefix> to use with the vk-cts run
+  --gl-cts-prefix <prefix>         <prefix> to use with the gl-cts run
+  --deqp-gles2-prefix <prefix>     <prefix> to use with the dEQP GLES2 run
+  --deqp-gles3-prefix <prefix>     <prefix> to use with the dEQP GLES3 run
+  --deqp-gles31-prefix <prefix>    <prefix> to use with the dEQP GLES3.1 run
+  --piglit-prefix <prefix>         <prefix> to use with the piglit run
+  --run-vk-cts                     Run vk-cts
+  --run-gl-cts                     Run gl-cts
+  --run-deqp-gles2-cts             Run dEQP GLES2
+  --run-deqp-gles3-cts             Run dEQP GLES3
+  --run-deqp-gles31-cts            Run dEQP GLES31
+  --run-piglit                     Run piglit
+  --create-piglit-report           Create results report
+  --patterns-file <path>           <path> to the patterns file
+  --ignore-forced-patterns         Ignore the forced patterns
+  --ignore-optional-patterns       Ignore the optional patterns
+  --invert-forced-patterns         Invert the forced patterns
+  --invert-optional-patterns       Invert the optional patterns
+  --vk-cts-all-concurrent          Run all the vk-cts tests concurrently
 
 HELP
 }
