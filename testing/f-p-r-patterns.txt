@@ -29,3 +29,11 @@ optional-exclusion-i965-piglit: spec.*arb_shader_ballot.*execution.*fs-builtin-v
 optional-exclusion-llvmpipe-piglit: spec.*arb_shader_ballot.*execution.*fs-builtin-variables
 optional-exclusion-swr-piglit: spec.*arb_shader_ballot.*execution.*fs-builtin-variables
 optional-exclusion-softpipe-piglit: spec.*arb_shader_ballot.*execution.*fs-builtin-variables
+optional-exclusion-i965-gl-cts: enhanced_layouts.*xfb_stride_of_empty_list
+optional-exclusion-i965-gl-cts: enhanced_layouts.*xfb_stride_of_empty_list_and_api
+optional-exclusion-llvm-gl-cts: enhanced_layouts.*xfb_stride_of_empty_list
+optional-exclusion-llvm-gl-cts: enhanced_layouts.*xfb_stride_of_empty_list_and_api
+optional-exclusion-swr-gl-cts: enhanced_layouts.*xfb_stride_of_empty_list
+optional-exclusion-swr-gl-cts: enhanced_layouts.*xfb_stride_of_empty_list_and_api
+optional-exclusion-softpipe-gl-cts: enhanced_layouts.*xfb_stride_of_empty_list
+optional-exclusion-softpipe-gl-cts: enhanced_layouts.*xfb_stride_of_empty_list_and_api
