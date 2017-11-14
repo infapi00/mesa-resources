@@ -144,9 +144,10 @@ Usage: $basename [--pass-line <pass_line> | --suite [piglit|vk-gl-cts]] --times 
 
 Options:
   --help                      Display this help and exit successfully
-  --times                     Amount of times to run the provided test
-  --suite                     Whether this is a piglit or vk-gl-cts test
-  --pass-line                 If different than the default one, provide the pass line to check
+  --times <n_times>           Amount of <n_times> to run the provided test
+  --suite [piglit|vk-gl-cts]  Whether this is a piglit or vk-gl-cts test.
+  --pass-line <pass_line>     If different than the default one, provide the
+                              <pass_line> to check
 
 HELP
 }
