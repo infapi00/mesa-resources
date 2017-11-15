@@ -37,3 +37,4 @@ optional-exclusion-swr-gl-cts: enhanced_layouts.*xfb_stride_of_empty_list
 optional-exclusion-swr-gl-cts: enhanced_layouts.*xfb_stride_of_empty_list_and_api
 optional-exclusion-softpipe-gl-cts: enhanced_layouts.*xfb_stride_of_empty_list
 optional-exclusion-softpipe-gl-cts: enhanced_layouts.*xfb_stride_of_empty_list_and_api
+optional-exclusion-swr-piglit: spec.*ext_transform_feedback.*immediate-reuse-uniform-buffer
