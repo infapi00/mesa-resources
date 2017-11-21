@@ -21,7 +21,7 @@ vblank_mode="${vblank_mode:-0}"
 export -p vblank_mode
 
 MAKEFLAGS=-j$(getconf _NPROCESSORS_ONLN)
-export MAKEFLAGS
+export -p MAKEFLAGS
 
 
 #------------------------------------------------------------------------------
