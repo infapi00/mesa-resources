@@ -35,7 +35,8 @@
 # SETTINGS
 # ========
 
-export DISPLAY=:0.0
+DISPLAY="${DISPLAY:-:0.0}"
+export -p DISPLAY
 
 # Unless specified, don't sync. It speeds up the tests execution ...
 vblank_mode="${vblank_mode:-0}"
