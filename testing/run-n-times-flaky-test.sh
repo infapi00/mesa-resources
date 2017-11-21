@@ -3,6 +3,11 @@
 # This script runs a piglit or dEQP test n times, and returns how many
 # runs have passed. Useful for flaky tests.
 #
+# In order to not lose the test debug info when running dEQP tests,
+# for each execution, it moves the TestResults.qpa file into
+# TestResults_PASS<number>.qpa or TestResults_FAIL<number>.qpa
+# respectively.
+#
 # Syntax : run-n-times-flaky-test.sh [--pass-line <pass_line> | --suite [piglit|deqp]] --times <n_times> <test_to_run>
 
 export LC_ALL=C
@@ -112,14 +117,17 @@ function check_suite() {
 function run_test {
     RNT_PASS=0
     RNT_FAIL=0
+    RNT_TIMES_DIGITS=${#RNT_TIMES}
 
     for (( i=1; i <= "${RNT_TIMES}"; i++ ));
     do
 	if [ $($RNT_TEST | grep "${RNT_PASS_LINE}" | wc -l) -eq 1 ]
 	then
             ((RNT_PASS=RNT_PASS+1))
+	    test "xdeqp" == "x${RNT_SUITE}" -a -f "TestResults.qpa" && mv "TestResults.qpa" "TestResults_PASS"$(printf "%0${RNT_TIMES_DIGITS}d" $RNT_PASS)".qpa"
 	else
             ((RNT_FAIL=RNT_FAIL+1))
+	    test "xdeqp" == "x${RNT_SUITE}" -a -f "TestResults.qpa" && mv "TestResults.qpa" "TestResults_FAIL"$(printf "%0${RNT_TIMES_DIGITS}d" $RNT_FAIL)".qpa"
 	fi
     done
 
@@ -145,6 +153,14 @@ function usage() {
     cat <<HELP
 
 Usage: $basename [--pass-line <pass_line> | --suite [piglit|deqp]] --times <n_times> <test_to_run>
+
+This script runs a piglit test n times, and returns how many runs have
+passed. Useful for flaky tests.
+
+In order to not lose the test debug info when running dEQP tests, for
+each execution, it moves the TestResults.qpa file into
+TestResults_PASS<number>.qpa or TestResults_FAIL<number>.qpa
+respectively.
 
 Options:
   --help                      Display this help and exit successfully
