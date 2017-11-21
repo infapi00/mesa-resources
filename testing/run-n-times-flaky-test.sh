@@ -1,9 +1,9 @@
 #!/bin/bash
 #
-# This script runs a piglit test n times, and returns how many runs
-# have passed. Useful for flaky tests.
+# This script runs a piglit or dEQP test n times, and returns how many
+# runs have passed. Useful for flaky tests.
 #
-# Syntax : run-n-times-flaky-test.sh [--pass-line <pass_line> | --suite [piglit|vk-gl-cts]] --times <n_times> <test_to_run>
+# Syntax : run-n-times-flaky-test.sh [--pass-line <pass_line> | --suite [piglit|deqp]] --times <n_times> <test_to_run>
 
 export LC_ALL=C
 
@@ -88,11 +88,11 @@ function check_suite() {
 	"xpiglit" )
 	    RNT_PASS_LINE="${RNT_PIGLIT_LINE}"
 	    ;;
-	"xvk-gl-cts" )
-	    RNT_PASS_LINE="${RNT_VK_GL_CTS_LINE}"
+	"xdeqp" )
+	    RNT_PASS_LINE="${RNT_DEQP_LINE}"
 	    ;;
 	*)
-	    printf "%s\n" "Error: A suite among [piglit|vk-gl-cts] has to be provided." >&2
+	    printf "%s\n" "Error: A suite among [piglit|deqp] has to be provided." >&2
 	    usage
 	    return 1
 	    ;;
@@ -144,12 +144,12 @@ function usage() {
     basename="`expr "//$0" : '.*/\([^/]*\)'`"
     cat <<HELP
 
-Usage: $basename [--pass-line <pass_line> | --suite [piglit|vk-gl-cts]] --times <n_times> <test_to_run>
+Usage: $basename [--pass-line <pass_line> | --suite [piglit|deqp]] --times <n_times> <test_to_run>
 
 Options:
   --help                      Display this help and exit successfully
   --times <n_times>           Amount of <n_times> to run the provided test
-  --suite [piglit|vk-gl-cts]  Whether this is a piglit or vk-gl-cts test.
+  --suite [piglit|deqp]       Whether this is a piglit or deqp test.
   --pass-line <pass_line>     If different than the default one, provide the
                               <pass_line> to check
 
@@ -164,7 +164,7 @@ HELP
 
 
 RNT_PIGLIT_LINE='PIGLIT: {"result": "pass" }'
-RNT_VK_GL_CTS_LINE='Passed:        1/1 (100.0%)'
+RNT_DEQP_LINE='Passed:        1/1 (100.0%)'
 
 
 # Choose which grep program to use (on Solaris, must be gnu grep)
@@ -200,7 +200,7 @@ do
 	    exit 4
 	fi
 	;;
-    # Whether this is a piglit or vk-gl-cts test
+    # Whether this is a piglit or deqp test
     --suite)
 	check_option_args $1 $2
 	shift
