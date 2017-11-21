@@ -12,6 +12,10 @@ PATH=${HOME}/.local/bin$(echo :$PATH | sed -e s@:${HOME}/.local/bin@@g)
 DISPLAY="${DISPLAY:-:0.0}"
 export -p DISPLAY
 
+# Unless specified, don't sync. It speeds up the tests execution ...
+vblank_mode="${vblank_mode:-0}"
+export -p vblank_mode
+
 
 #------------------------------------------------------------------------------
 #			Function: check_option_args

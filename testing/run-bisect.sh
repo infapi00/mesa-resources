@@ -37,6 +37,10 @@
 
 export DISPLAY=:0.0
 
+# Unless specified, don't sync. It speeds up the tests execution ...
+vblank_mode="${vblank_mode:-0}"
+export -p vblank_mode
+
 # Paths ...
 # ---------
 
