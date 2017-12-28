@@ -350,8 +350,8 @@ function run_tests {
 	FPR_RUN_GL_CTS_DIR="${FPR_VK_GL_CTS_BUILD_PATH}"/external/openglcts/modules
 	FPR_RUN_GL_CTS_BIN=glcts
 	export -p MESA_GLES_VERSION_OVERRIDE=3.2
-	export -p MESA_GL_VERSION_OVERRIDE=4.5
-	export -p MESA_GLSL_VERSION_OVERRIDE=450
+	export -p MESA_GL_VERSION_OVERRIDE=4.6
+	export -p MESA_GLSL_VERSION_OVERRIDE=460
 	cd "$FPR_RUN_GL_CTS_DIR"
 	./"$FPR_RUN_GL_CTS_BIN" --deqp-runmode=txt-caselist --deqp-case=KHR-GL30 | $FPR_GREP KHR-GL30 > /dev/null
 	if [ $? -eq 0 ] && [ -f "$FPR_PIGLIT_PATH/tests/khr_gl45.py" ]; then
