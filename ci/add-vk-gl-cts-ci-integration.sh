@@ -1,62 +1,17 @@
 #!/bin/bash
 
-cat <<CHANGES  > .travis.yml
+UCB_TMP_FILE=$(mktemp)
+cat <<CHANGES | cat - .travis.yml > $UCB_TMP_FILE
 notifications:
   email:
     recipients:
-      - jasuarez+vk-gl-cts-travis@igalia.com
-      - tanty+vk-gl-cts-travis@igalia.com
+      - jasuarez+mesa-travis@igalia.com
+      - tanty+mesa-travis@igalia.com
 
-language: c++
-
-sudo: required
-dist: trusty
-
-cache:
-  apt: true
-  ccache: true
-
-env:
-  global:
-    - MAKEFLAGS="-j4"
-
-matrix:
-  include:
-    - env:
-        - RECIPE="clang-64-debug"
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-3.9
-          packages:
-            - clang-3.9
-
-    - env:
-        - RECIPE="gcc-32-debug"
-      addons:
-        apt:
-          packages:
-            - g++-multilib
-
-    - env:
-        - RECIPE="gcc-64-release"
-
-    - env:
-        - RECIPE="android-mustpass"
-
-    - env:
-        - RECIPE="vulkan-mustpass"
-
-    - env:
-        - RECIPE="gen-inl-files"
-      addons:
-        apt:
-          packages:
-            - python-lxml
-
-script:
-  - python2 ./scripts/check_build_sanity.py -r \$RECIPE
 CHANGES
+
+cat $UCB_TMP_FILE > .travis.yml
+rm  $UCB_TMP_FILE
 
 cat <<CHANGES  > appveyor.yml
 version: '{build}'
@@ -80,9 +35,5 @@ build_script:
   - python ./scripts/check_build_sanity.py -r %RECIPE%
 CHANGES
 
-cat <<CHANGES  >> .gitignore
-!.travis.yml
-CHANGES
-
-git add .travis.yml appveyor.yml .gitignore
-git commit -m "ci: added travis and appveyor integration"
+git add .travis.yml appveyor.yml
+git commit -m "ci: added travis notifications and appveyor integration"
