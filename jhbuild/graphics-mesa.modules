@@ -19,6 +19,8 @@
       href="git://anongit.freedesktop.org/git/xorg/doc"/>
  <repository type="git" name="xcb" default="yes"
       href="git://anongit.freedesktop.org/git/xcb"/>
+ <repository type="git" name="wayland" default="yes"
+      href="git://anongit.freedesktop.org/wayland"/>
  <repository type="git" name="waffle-gl" default="yes"
       href="git://github.com/waffle-gl"/>
   <repository type="git" name="gnome" default="yes"
@@ -73,6 +75,10 @@
     <branch repo="xorg-lib"/>
   </autotools>
 
+  <autotools id="wayland-protocols">
+    <branch repo="wayland"/>
+  </autotools>
+
   <autotools id="mesa" skip-autogen="never" autogenargs="--enable-gles2 --disable-gallium-egl --with-platforms=x11,drm --enable-gbm --enable-shared-glapi">
     <branch repo="mesa" branch="9.1"/>
     <dependencies>
@@ -83,6 +89,7 @@
       <dep package="presentproto"/>
       <dep package="libxcb"/>
       <dep package="libxshmfence"/>
+      <dep package="wayland-protocols"/>
     </dependencies>
   </autotools>
 
