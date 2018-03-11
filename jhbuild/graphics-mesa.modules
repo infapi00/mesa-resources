@@ -11,7 +11,7 @@
       href="git://anongit.freedesktop.org/git/mesa"/>
   <repository type="git" name="xorg-util" default="yes"
       href="git://anongit.freedesktop.org/git/xorg/util"/>
-  <repository type="git" name="xorg-proto" default="yes"
+  <repository type="git" name="xorgproto" default="yes"
       href="git://anongit.freedesktop.org/git/xorg/proto"/>
   <repository type="git" name="xorg-lib" default="yes"
       href="git://anongit.freedesktop.org/git/xorg/lib"/>
@@ -51,14 +51,6 @@
     <branch repo="mesa"/>
   </autotools>
 
-  <autotools id="dri3proto">
-    <branch repo="xorg-proto"/>
-  </autotools>
-
-  <autotools id="presentproto">
-    <branch repo="xorg-proto"/>
-  </autotools>
-
  <autotools id="proto">
     <branch repo="xcb"/>
   </autotools>
@@ -84,9 +76,6 @@
     <dependencies>
       <dep package="drm"/>
       <dep package="libX11"/>
-      <dep package="glproto"/>
-      <dep package="dri3proto"/>
-      <dep package="presentproto"/>
       <dep package="libxcb"/>
       <dep package="libxshmfence"/>
       <dep package="wayland-protocols"/>
@@ -152,21 +141,10 @@
     <branch repo="xorg-util"/>
   </autotools>
 
-  <autotools id="glproto">
-    <branch repo="xorg-proto"/>
-  </autotools>
-
-  <autotools id="xproto">
-    <branch repo="xorg-proto"/>
+  <autotools id="xorgproto">
+    <branch repo="xorgproto"/>
     <dependencies>
       <dep package="macros"/>
-    </dependencies>
-  </autotools>
-
-  <autotools id="kbproto">
-    <branch repo="xorg-proto"/>
-    <dependencies>
-      <dep package="xproto"/>
     </dependencies>
   </autotools>
 
@@ -175,7 +153,6 @@
     <dependencies>
       <dep package="libxcb"/>
       <dep package="macros"/>
-      <dep package="kbproto"/>
       <dep package="libxtrans"/>
     </dependencies>
   </autotools>
@@ -189,7 +166,6 @@
     <dependencies>
       <dep package="macros"/>
       <dep package="xproto"/>
-      <dep package="kbproto"/>
       <dep package="libX11"/>
     </dependencies>
   </autotools>
