@@ -3,6 +3,8 @@
 <?xml-stylesheet type="text/xsl" href="moduleset.xsl"?>
 <!-- vim:set ts=2 expandtab: -->
 <moduleset>
+  <repository type="git" name="android" default="yes"
+      href="https://android.googlesource.com/platform/external"/>
   <repository type="git" name="freedesktop" default="yes"
       href="git://anongit.freedesktop.org/git"/>
   <repository type="git" name="wayland" default="yes"
@@ -96,6 +98,13 @@
     <dependencies>
       <dep package="waffle"/>
     </dependencies>
+  </cmake>
+
+  <cmake id="deqp"
+         cmakearks="-DPNG_INCLUDE_PATH=/usr/include/libpng"
+         skip-install="true">
+     <branch repo="android"
+             module="deqp"/>
   </cmake>
 
   <cmake id="apitrace">
