@@ -19,9 +19,7 @@
       href="git://anongit.freedesktop.org/git/xorg/doc"/>
  <repository type="git" name="xcb" default="yes"
       href="git://anongit.freedesktop.org/git/xcb"/>
- <repository type="git" name="wayland" default="yes"
-      href="git://anongit.freedesktop.org/wayland"/>
- <repository type="git" name="waffle-gl" default="yes"
+  <repository type="git" name="waffle-gl" default="yes"
       href="git://github.com/waffle-gl"/>
   <repository type="git" name="gnome" default="yes"
       href="git://git.gnome.org"/>
