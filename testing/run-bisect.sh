@@ -42,6 +42,13 @@ export -p DISPLAY
 vblank_mode="${vblank_mode:-0}"
 export -p vblank_mode
 
+# env vars ...
+# ------------
+
+MESA_GLES_VERSION_OVERRIDE="${MESA_GLES_VERSION_OVERRIDE:-3.2}"
+MESA_GL_VERSION_OVERRIDE="${MESA_GL_VERSION_OVERRIDE:-4.6}"
+MESA_GLSL_VERSION_OVERRIDE="${MESA_GLSL_VERSION_OVERRIDE:-460}"
+
 # Paths ...
 # ---------
 
@@ -49,6 +56,7 @@ DEV_PATH="/home/guest/agomez/jhbuild"
 MESA="${DEV_PATH}/mesa.git"
 PIGLIT="${DEV_PATH}/piglit.git"
 VK_GL_CTS_BUILD="${DEV_PATH}/vk-gl-cts.git/build"
+VK_GL_CTS_BIN_PATH="${VK_GL_CTS_BUILD}/external/openglcts/modules"
 
 # Rebuild the test suite?
 # -----------------------
@@ -85,12 +93,14 @@ until false; do
       cmake --build . || (RESULT=130 && break)
   fi
   cd -
-  echo 'MESA_GLES_VERSION_OVERRIDE=3.2 MESA_GL_VERSION_OVERRIDE="4.5" MESA_GLSL_VERSION_OVERRIDE="450" '"${VK_GL_CTS_BUILD}"'/cts/glcts --deqp-case='"${CTSTEST}"
+  cd "${VK_GL_CTS_BIN_PATH}"
+  echo "MESA_GLES_VERSION_OVERRIDE=$MESA_GLES_VERSION_OVERRIDE MESA_GL_VERSION_OVERRIDE=$MESA_GL_VERSION_OVERRIDE MESA_GLSL_VERSION_OVERRIDE=$MESA_GLSL_VERSION_OVERRIDE ${VK_GL_CTS_BIN_PATH}"'/glcts --deqp-case='"${CTSTEST}"
   # Duplicate stdout
   exec 5>&1
-  CTS_OUTPUT=$(MESA_GLES_VERSION_OVERRIDE=3.2 MESA_GL_VERSION_OVERRIDE="4.5" MESA_GLSL_VERSION_OVERRIDE="450" "${VK_GL_CTS_BUILD}"/external/openglcts/modules/glcts --deqp-case="${CTSTEST}" | tee >(cat - >&5))
-  echo "${CTS_OUTPUT}" | grep "Passed" | grep "100.00%"
+  CTS_OUTPUT=$(MESA_GLES_VERSION_OVERRIDE="$MESA_GLES_VERSION_OVERRIDE" MESA_GL_VERSION_OVERRIDE="$MESA_GL_VERSION_OVERRIDE" MESA_GLSL_VERSION_OVERRIDE="$MESA_GLSL_VERSION_OVERRIDE" "${VK_GL_CTS_BIN_PATH}"/glcts --deqp-case="${CTSTEST}" | tee >(cat - >&5))
+  echo "${CTS_OUTPUT}" | grep "Passed" | grep "100.0%"
   RESULT=$?
+  cd -
   break
 done
 
