@@ -16,5 +16,4 @@ os.environ['CXXFLAGS'] = '-Wall -g3 -O0 -ggdb3'
 autogenargs='--disable-static'
 makeargs = '-j16 V=1'
 
-
-module_autogenargs['mesa'] = '--disable-static --enable-debug --with-dri-drivers=swrast,i965 --with-gallium-drivers=swrast --with-vulkan-drivers=intel'
+module_mesonargs['mesa'] = '-Ddri-drivers=i965 -Dvulkan-drivers=intel -Dbuildtype=debug'
