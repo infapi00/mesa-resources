@@ -67,7 +67,7 @@
     <branch repo="xorg-lib"/>
   </autotools>
 
-  <autotools id="mesa" skip-autogen="never" autogenargs="--enable-gles2 --disable-gallium-egl --with-platforms=x11,drm --enable-gbm --enable-shared-glapi">
+  <meson id="mesa" mesonargs="-Dplatforms=x11,drm -Dgallium-drivers=">
     <branch repo="mesa" branch="9.1"/>
     <dependencies>
       <dep package="drm"/>
@@ -77,7 +77,7 @@
       <dep package="wayland"/>
       <dep package="wayland-protocols"/>
     </dependencies>
-  </autotools>
+  </meson>
 
   <autotools id="demos" autogenargs="--enable-egl --enable-gles1 --enable-gles2">
     <branch repo="mesa"/>
