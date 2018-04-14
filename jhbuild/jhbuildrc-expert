@@ -32,12 +32,12 @@ makeargs = '-j16 V=1'
 
 
 if os.environ['GL_DRIVER'] == 'i965':
-    module_autogenargs['mesa'] = '--disable-static --enable-debug --with-dri-drivers=swrast,i965 --with-gallium-drivers=swrast --with-vulkan-drivers=intel'
-    #module_autogenargs['mesa'] = '--disable-static --enable-debug --with-dri-drivers=i965 --without-gallium-drivers'
+    module_mesonargs['mesa'] = '-Ddri-drivers=i965,swrast -Dvulkan-drivers=intel -Dbuildtype=debug'
 elif os.environ['GL_DRIVER'] == 'nouveau':
-    module_autogenargs['mesa'] = '--disable-static --enable-debug -with-gallium-drivers=swrast,nouveau --with-dri-drivers=swrast,nouveau'
+    module_mesonargs['mesa'] = '-Ddri-drivers=swrast,nouveau -Dgallium-drivers=swrast,nouveau -Dbuildtype=debug'
 elif os.environ['GL_DRIVER'] == 'radeon':
-    module_autogenargs['mesa'] = '--disable-static --enable-debug -with-gallium-drivers=swrast,radeon --with-dri-drivers=swrast,radeon'
+    module_mesonargs['mesa'] = '-Ddri-drivers=swrast,radeon -Dgallium-drivers=swrast,radeon -Dbuildtype=debug'
+
 module_autogenargs['demos'] = '--disable-static --enable-debug'
 
 #Ubuntu custom stuff
