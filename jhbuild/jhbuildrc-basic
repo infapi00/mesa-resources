@@ -1,46 +1,20 @@
 # -*- mode: python -*-
 # -*- coding: utf-8 -*-
 
-if not os.environ.has_key('JHBUILD_MESA_ROOT'):
-    os.environ['JHBUILD_MESA_ROOT'] = os.path.expanduser('~/mesa/')
-
-if not os.environ.has_key('MESA_RESOURCES'):
-    os.environ['MESA_RESOURCES'] = os.path.join(os.environ['JHBUILD_MESA_ROOT'], 'mesa-resources.git')
-
-if not os.environ.has_key('GL_DRIVER'):
-    os.environ['GL_DRIVER'] = 'i965'
-
-moduleset = [ os.path.join(os.environ['MESA_RESOURCES'], 'jhbuild/graphics-mesa.modules') ]
-if os.environ['GL_DRIVER'] in ['i965', 'nouveau', 'radeon']:
-    modules = ['mesa', 'demos']
-else:
-    modules = ['waffle', 'piglit']
+moduleset = [ os.path.expanduser('~/mesa/mesa-resources/jhbuild/graphics-mesa.modules') ]
+modules = ['mesa', 'demos']
 
 use_local_modulesets = True
 
-checkoutroot = os.path.join(os.environ['JHBUILD_MESA_ROOT'], os.environ['GL_DRIVER'], 'source')
-buildroot = os.path.join(os.environ['JHBUILD_MESA_ROOT'], os.environ['GL_DRIVER'], 'build')
-prefix = os.path.join(os.environ['JHBUILD_MESA_ROOT'], os.environ['GL_DRIVER'], 'install')
+checkoutroot = os.path.expanduser('~/mesa/source')
+buildroot = None
+prefix = os.path.expanduser('~/mesa/install')
 
 os.environ['CFLAGS'] = '-Wall -g3 -O0 -ggdb3'
 os.environ['CXXFLAGS'] = '-Wall -g3 -O0 -ggdb3'
 
 autogenargs='--disable-static'
-
-# If you use ICECC you want much more cores
 makeargs = '-j16 V=1'
 
 
-if os.environ['GL_DRIVER'] == 'i965':
-    module_autogenargs['mesa'] = '--disable-static --enable-debug --with-dri-drivers=swrast,i965 --with-gallium-drivers=swrast --with-vulkan-drivers=intel'
-    #module_autogenargs['mesa'] = '--disable-static --enable-debug --with-dri-drivers=i965 --without-gallium-drivers'
-elif os.environ['GL_DRIVER'] == 'nouveau':
-    module_autogenargs['mesa'] = '--disable-static --enable-debug -with-gallium-drivers=swrast,nouveau --with-dri-drivers=swrast,nouveau'
-elif os.environ['GL_DRIVER'] == 'radeon':
-    module_autogenargs['mesa'] = '--disable-static --enable-debug -with-gallium-drivers=swrast,radeon --with-dri-drivers=swrast,radeon'
-module_autogenargs['demos'] = '--disable-static --enable-debug'
-
-#Ubuntu custom stuff
-#addpath('PKG_CONFIG_PATH', '/usr/share/pkgconfig')
-#addpath('PKG_CONFIG_PATH', '/usr/lib/pkgconfig')
-#addpath('PKG_CONFIG_PATH', '/usr/lib/x86_64-linux-gnu/pkgconfig')
+module_autogenargs['mesa'] = '--disable-static --enable-debug --with-dri-drivers=swrast,i965 --with-gallium-drivers=swrast --with-vulkan-drivers=intel'
