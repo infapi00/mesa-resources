@@ -14,6 +14,10 @@ PATH=${HOME}/.local/bin$(echo :$PATH | sed -e s@:${HOME}/.local/bin@@g)
 DISPLAY="${DISPLAY:-:0.0}"
 export -p DISPLAY
 
+# Unless specified, don't sync. It speeds up the tests execution ...
+vblank_mode="${vblank_mode:-0}"
+export -p vblank_mode
+
 
 #------------------------------------------------------------------------------
 #			Function: backup_redirection
@@ -147,6 +151,10 @@ function check_option_args() {
 # returns:
 #   0 is success, an error code otherwise
 function generate_pattern {
+    # Ugly, but we will like to break long lines ...
+    FPR_NEW_LINE="
+"
+
     if [ ! -f "$FPR_PATTERNS_FILE" ]; then
 	printf "%s\n" "Error: the patterns file: \"$FPR_PATTERNS_FILE\" doesn't exist." >&2
 	usage
@@ -155,16 +163,16 @@ function generate_pattern {
     if $FPR_GENERATE_FORCED_PATTERN; then
 	FPR_FORCED_PATTERN_TOKEN=$(($FPR_INVERT_FORCED_PATTERN && echo "-t") || echo "-x")
 	for i in $($FPR_GREP $FPR_GL_DRIVER "$FPR_PATTERNS_FILE" | $FPR_GREP $1 | $FPR_GREP "forced-exclusion" | cut -d : -f 2); do
-	    FPR_PATTERNS_PARAMETERS="$FPR_FORCED_PATTERN_TOKEN $i $FPR_PATTERNS_PARAMETERS"
+	    FPR_PATTERNS_PARAMETERS="$FPR_FORCED_PATTERN_TOKEN $i "$FPR_NEW_LINE"$FPR_PATTERNS_PARAMETERS"
 	done
     fi
     if $FPR_GENERATE_OPTIONAL_PATTERN; then
 	FPR_OPTIONAL_PATTERN_TOKEN=$(($FPR_INVERT_OPTIONAL_PATTERN && echo "-t") || echo "-x")
 	for i in $($FPR_GREP $FPR_GL_DRIVER "$FPR_PATTERNS_FILE" | $FPR_GREP $1 | $FPR_GREP "optional-exclusion" | cut -d : -f 2); do
-	    FPR_PATTERNS_PARAMETERS="$FPR_OPTIONAL_PATTERN_TOKEN $i $FPR_PATTERNS_PARAMETERS"
+	    FPR_PATTERNS_PARAMETERS="$FPR_OPTIONAL_PATTERN_TOKEN $i "$FPR_NEW_LINE"$FPR_PATTERNS_PARAMETERS"
 	done
     fi
-    echo $FPR_PATTERNS_PARAMETERS
+    echo "$FPR_PATTERNS_PARAMETERS"
 
     return 0
 }
@@ -339,11 +347,27 @@ function run_tests {
     fi
 
     if $FPR_RUN_GL_CTS; then
-	export -p PIGLIT_CTS_GL_BIN="${FPR_VK_GL_CTS_BUILD_PATH}"/external/openglcts/modules/glcts
+	FPR_RUN_GL_CTS_DIR="${FPR_VK_GL_CTS_BUILD_PATH}"/external/openglcts/modules
+	FPR_RUN_GL_CTS_BIN=glcts
 	export -p MESA_GLES_VERSION_OVERRIDE=3.2
-	export -p MESA_GL_VERSION_OVERRIDE=4.5
-	export -p MESA_GLSL_VERSION_OVERRIDE=450
-	FPR_INNER_RUN_SET=cts_gl45
+	export -p MESA_GL_VERSION_OVERRIDE=4.6
+	export -p MESA_GLSL_VERSION_OVERRIDE=460
+	cd "$FPR_RUN_GL_CTS_DIR"
+	./"$FPR_RUN_GL_CTS_BIN" --deqp-runmode=txt-caselist --deqp-case=KHR-GL30 | $FPR_GREP KHR-GL30 > /dev/null
+	if [ $? -eq 0 ] && [ -f "$FPR_PIGLIT_PATH/tests/khr_gl45.py" ]; then
+	    FPR_INNER_RUN_SET=khr_gl45
+	    export -p PIGLIT_KHR_GL_BIN="$FPR_RUN_GL_CTS_DIR"/"$FPR_RUN_GL_CTS_BIN"
+	    FPR_INNER_RUN_MESSAGE=" \
+			      PIGLIT_KHR_GL_BIN=\"$PIGLIT_KHR_GL_BIN\" \
+			      PIGLIT_KHR_GL_EXTRA_ARGS=\"$PIGLIT_KHR_GL_EXTRA_ARGS\""
+	else
+	    FPR_INNER_RUN_SET=cts_gl45
+	    export -p PIGLIT_CTS_GL_BIN="$FPR_RUN_GL_CTS_DIR"/"$FPR_RUN_GL_CTS_BIN"
+	    FPR_INNER_RUN_MESSAGE=" \
+			      PIGLIT_CTS_GL_BIN=\"$PIGLIT_CTS_GL_BIN\" \
+			      PIGLIT_CTS_GL_EXTRA_ARGS=\"$PIGLIT_CTS_GL_EXTRA_ARGS\""
+	fi
+	cd -
 	FPR_INNER_RUN_PARAMETERS="$(generate_pattern gl-cts)"
 	if [ $? -ne 0 ]; then
 	    return $?
@@ -353,8 +377,7 @@ function run_tests {
 	FPR_INNER_RUN_REFERENCE=$GL_CTS_REFERENCE
 	FPR_INNER_RUN_SUMMARY=$GL_CTS_SUMMARY
 	FPR_INNER_RUN_MESSAGE=" \
-			      PIGLIT_CTS_GL_BIN=\"$PIGLIT_CTS_GL_BIN\" \
-			      PIGLIT_CTS_GL_EXTRA_ARGS=\"$PIGLIT_CTS_GL_EXTRA_ARGS\" \
+			      $FPR_INNER_RUN_MESSAGE \
 			      MESA_GLES_VERSION_OVERRIDE=\"$MESA_GLES_VERSION_OVERRIDE\" \
 			      MESA_GL_VERSION_OVERRIDE=\"$MESA_GL_VERSION_OVERRIDE\" \
 			      MESA_GLSL_VERSION_OVERRIDE=\"$MESA_GLSL_VERSION_OVERRIDE\""
@@ -362,6 +385,9 @@ function run_tests {
 	if [ $? -ne 0 ]; then
 	    return $?
 	fi
+        unset FPR_RUN_GL_CTS_DIR
+        unset FPR_RUN_GL_CTS_BIN
+        unset PIGLIT_KHR_GL_BIN
         unset PIGLIT_CTS_GL_BIN
         unset MESA_GLES_VERSION_OVERRIDE
         unset MESA_GLSL_VERSION_OVERRIDE
@@ -476,35 +502,40 @@ function usage() {
 Usage: $basename [options] --driver [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe|anv|radv] --commit <mesa-commit-id>
 
 Options:
-  --dry-run                   Does everything except running the tests
-  --verbosity                 Which verbosity level to use [full|normal|quite]. Default, normal.
-  --help                      Display this help and exit successfully
-  --driver                    Which driver with which to run the tests [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe|anv|radv]
-  --commit                    Mesa commit to output
-  --base-path                 PATH from which to create the rest of the relative paths
-  --piglit-path               PATH to the built piglit binaries
-  --piglit-results-path       PATH to the piglit results
-  --vk-gl-cts-path            PATH to the built vk-gl-cts binaries
-  --deqp-path                 PATH to the built dEQP binaries
-  --vk-cts-prefix             Prefix to use with the vk-cts run
-  --gl-cts-prefix             Prefix to use with the gl-cts run
-  --deqp-gles2-prefix         Prefix to use with the dEQP GLES2 run
-  --deqp-gles3-prefix         Prefix to use with the dEQP GLES3 run
-  --deqp-gles31-prefix        Prefix to use with the dEQP GLES3.1 run
-  --piglit-prefix             Prefix to use with the piglit run
-  --run-vk-cts                Run vk-cts
-  --run-gl-cts                Run gl-cts
-  --run-deqp-gles2-cts        Run dEQP GLES2
-  --run-deqp-gles3-cts        Run dEQP GLES3
-  --run-deqp-gles31-cts       Run dEQP GLES31
-  --run-piglit                Run piglit
-  --create-piglit-report      Create results report
-  --patterns-file             PATH to the patterns file
-  --ignore-forced-patterns    Ignore the forced patterns
-  --ignore-optional-patterns  Ignore the optional patterns
-  --invert-forced-patterns    Invert the forced patterns
-  --invert-optional-patterns  Invert the optional patterns
-  --vk-cts-all-concurrent     Run all the vk-cts tests concurrently
+  --dry-run                        Does everything except running the tests
+  --verbosity [full|normal|quite]  Which verbosity level to use
+                                   [full|normal|quite]. Default, normal.
+  --help                           Display this help and exit successfully
+  --driver [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr|softpipe|anv|radv]
+                                   Which driver with which to run the tests
+                                   [i965|nouveau|nvidia|radeon|amd|llvmpipe|swr
+                                    |softpipe|anv|radv]
+  --commit <commit>                Mesa commit to output
+  --base-path <path>               <path> from which to create the rest of the
+                                   relative paths
+  --piglit-path <path>             <path> to the built piglit binaries
+  --piglit-results-path <path>     <path> to the piglit results
+  --vk-gl-cts-path <path>          <path> to the built vk-gl-cts binaries
+  --deqp-path <path>               <path> to the built dEQP binaries
+  --vk-cts-prefix <prefix>         <prefix> to use with the vk-cts run
+  --gl-cts-prefix <prefix>         <prefix> to use with the gl-cts run
+  --deqp-gles2-prefix <prefix>     <prefix> to use with the dEQP GLES2 run
+  --deqp-gles3-prefix <prefix>     <prefix> to use with the dEQP GLES3 run
+  --deqp-gles31-prefix <prefix>    <prefix> to use with the dEQP GLES3.1 run
+  --piglit-prefix <prefix>         <prefix> to use with the piglit run
+  --run-vk-cts                     Run vk-cts
+  --run-gl-cts                     Run gl-cts
+  --run-deqp-gles2-cts             Run dEQP GLES2
+  --run-deqp-gles3-cts             Run dEQP GLES3
+  --run-deqp-gles31-cts            Run dEQP GLES31
+  --run-piglit                     Run piglit
+  --create-piglit-report           Create results report
+  --patterns-file <path>           <path> to the patterns file
+  --ignore-forced-patterns         Ignore the forced patterns
+  --ignore-optional-patterns       Ignore the optional patterns
+  --invert-forced-patterns         Invert the forced patterns
+  --invert-optional-patterns       Invert the optional patterns
+  --vk-cts-all-concurrent          Run all the vk-cts tests concurrently
 
 HELP
 }
