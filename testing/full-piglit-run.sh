@@ -282,6 +282,16 @@ function run_tests {
 	fi
     fi
 
+    if ${FPR_RUN_CRUCIBLE}; then
+	cd "${FPR_CRUCIBLE_BUILD_PATH}"
+	CRUCIBLE_COMMIT=$(git show --pretty=format:"%h" --no-patch)
+	cd - > /dev/null
+	if [ "x${CRUCIBLE_COMMIT}" = "x" ]; then
+	    printf "%s\n" "Error: Couldn\'t get crucible\'s commit ID" >&2
+	    return 8
+	fi
+    fi
+
     if ${FPR_RUN_PIGLIT}; then
 	cd "${FPR_PIGLIT_PATH}"
 	PIGLIT_COMMIT=$(git show --pretty=format:"%h" --no-patch)
@@ -299,6 +309,7 @@ function run_tests {
     DEQP_GLES2_NAME="${FPR_DEQP_GLES2_PREFIX}-${FPR_GL_DRIVER}-${TIMESTAMP}-${DEQP_COMMIT}-mesa-${FPR_MESA_COMMIT}"
     DEQP_GLES3_NAME="${FPR_DEQP_GLES3_PREFIX}-${FPR_GL_DRIVER}-${TIMESTAMP}-${DEQP_COMMIT}-mesa-${FPR_MESA_COMMIT}"
     DEQP_GLES31_NAME="${FPR_DEQP_GLES31_PREFIX}-${FPR_GL_DRIVER}-${TIMESTAMP}-${DEQP_COMMIT}-mesa-${FPR_MESA_COMMIT}"
+    CRUCIBLE_NAME="${FPR_CRUCIBLE_PREFIX}-${FPR_GL_DRIVER}-${TIMESTAMP}-${CRUCIBLE_COMMIT}-mesa-${FPR_MESA_COMMIT}"
     PIGLIT_NAME="${FPR_PIGLIT_PREFIX}-${FPR_GL_DRIVER}-${TIMESTAMP}-${PIGLIT_COMMIT}-mesa-${FPR_MESA_COMMIT}"
 
     VK_CTS_RESULTS="${FPR_PIGLIT_RESULTS_PATH}/results/${VK_CTS_NAME}"
@@ -306,6 +317,7 @@ function run_tests {
     DEQP_GLES2_RESULTS="${FPR_PIGLIT_RESULTS_PATH}/results/${DEQP_GLES2_NAME}"
     DEQP_GLES3_RESULTS="${FPR_PIGLIT_RESULTS_PATH}/results/${DEQP_GLES3_NAME}"
     DEQP_GLES31_RESULTS="${FPR_PIGLIT_RESULTS_PATH}/results/${DEQP_GLES31_NAME}"
+    CRUCIBLE_RESULTS="${FPR_PIGLIT_RESULTS_PATH}/results/${CRUCIBLE_NAME}"
     PIGLIT_RESULTS="${FPR_PIGLIT_RESULTS_PATH}/results/${PIGLIT_NAME}"
 
     VK_CTS_SUMMARY="${FPR_PIGLIT_RESULTS_PATH}/summary/${VK_CTS_NAME}"
@@ -313,6 +325,7 @@ function run_tests {
     DEQP_GLES2_SUMMARY="${FPR_PIGLIT_RESULTS_PATH}/summary/${DEQP_GLES2_NAME}"
     DEQP_GLES3_SUMMARY="${FPR_PIGLIT_RESULTS_PATH}/summary/${DEQP_GLES3_NAME}"
     DEQP_GLES31_SUMMARY="${FPR_PIGLIT_RESULTS_PATH}/summary/${DEQP_GLES31_NAME}"
+    CRUCIBLE_SUMMARY="${FPR_PIGLIT_RESULTS_PATH}/summary/${CRUCIBLE_NAME}"
     PIGLIT_SUMMARY="${FPR_PIGLIT_RESULTS_PATH}/summary/${PIGLIT_NAME}"
 
     VK_CTS_REFERENCE="${FPR_PIGLIT_RESULTS_PATH}/reference/${FPR_VK_CTS_PREFIX}-${FPR_GL_DRIVER}${FPR_VK_CTS_REFERENCE_SUFFIX:+-}${FPR_VK_CTS_REFERENCE_SUFFIX}"
@@ -320,6 +333,7 @@ function run_tests {
     DEQP_GLES2_REFERENCE="${FPR_PIGLIT_RESULTS_PATH}/reference/${FPR_DEQP_GLES2_PREFIX}-${FPR_GL_DRIVER}${FPR_DEQP_GLES2_REFERENCE_SUFFIX:+-}${FPR_DEQP_GLES2_REFERENCE_SUFFIX}"
     DEQP_GLES3_REFERENCE="${FPR_PIGLIT_RESULTS_PATH}/reference/${FPR_DEQP_GLES3_PREFIX}-${FPR_GL_DRIVER}${FPR_DEQP_GLES3_REFERENCE_SUFFIX:+-}${FPR_DEQP_GLES3_REFERENCE_SUFFIX}"
     DEQP_GLES31_REFERENCE="${FPR_PIGLIT_RESULTS_PATH}/reference/${FPR_DEQP_GLES31_PREFIX}-${FPR_GL_DRIVER}${FPR_DEQP_GLES31_REFERENCE_SUFFIX:+-}${FPR_DEQP_GLES31_REFERENCE_SUFFIX}"
+    CRUCIBLE_REFERENCE="${FPR_PIGLIT_RESULTS_PATH}/reference/${FPR_CRUCIBLE_PREFIX}-${FPR_GL_DRIVER}${FPR_CRUCIBLE_REFERENCE_SUFFIX:+-}${FPR_CRUCIBLE_REFERENCE_SUFFIX}"
     PIGLIT_REFERENCE="${FPR_PIGLIT_RESULTS_PATH}/reference/${FPR_PIGLIT_PREFIX}-${FPR_GL_DRIVER}${FPR_PIGLIT_REFERENCE_SUFFIX:+-}${FPR_PIGLIT_REFERENCE_SUFFIX}"
 
     if $FPR_RUN_VK_CTS; then
@@ -472,6 +486,26 @@ function run_tests {
         unset MESA_GLES_VERSION_OVERRIDE
     fi
 
+    if $FPR_RUN_CRUCIBLE; then
+	export -p PIGLIT_CRUCIBLE_BIN="${FPR_CRUCIBLE_BUILD_PATH}"/bin/crucible
+	FPR_INNER_RUN_SET=crucible
+	FPR_INNER_RUN_PARAMETERS="$(generate_pattern crucible)"
+	if [ $? -ne 0 ]; then
+	    return $?
+	fi
+	FPR_INNER_RUN_NAME=$CRUCIBLE_NAME
+	FPR_INNER_RUN_RESULTS=$CRUCIBLE_RESULTS
+	FPR_INNER_RUN_REFERENCE=$CRUCIBLE_REFERENCE
+	FPR_INNER_RUN_SUMMARY=$CRUCIBLE_SUMMARY
+	FPR_INNER_RUN_MESSAGE=" \
+			      PIGLIT_CRUCIBLE_BIN=\"$PIGLIT_CRUCIBLE_BIN\""
+	inner_run_tests
+	if [ $? -ne 0 ]; then
+	    return $?
+	fi
+        unset PIGLIT_CRUCIBLE_BIN
+    fi
+
     if $FPR_RUN_PIGLIT; then
 	FPR_INNER_RUN_SET=all
 	FPR_INNER_RUN_PARAMETERS="$(generate_pattern piglit)"
@@ -517,17 +551,20 @@ Options:
   --piglit-results-path <path>     <path> to the piglit results
   --vk-gl-cts-path <path>          <path> to the built vk-gl-cts binaries
   --deqp-path <path>               <path> to the built dEQP binaries
+  --crucible-path <path>           <path> to the built crucible binaries
   --vk-cts-prefix <prefix>         <prefix> to use with the vk-cts run
   --gl-cts-prefix <prefix>         <prefix> to use with the gl-cts run
   --deqp-gles2-prefix <prefix>     <prefix> to use with the dEQP GLES2 run
   --deqp-gles3-prefix <prefix>     <prefix> to use with the dEQP GLES3 run
   --deqp-gles31-prefix <prefix>    <prefix> to use with the dEQP GLES3.1 run
+  --crucible-prefix <prefix>       <prefix> to use with the crucible run
   --piglit-prefix <prefix>         <prefix> to use with the piglit run
   --run-vk-cts                     Run vk-cts
   --run-gl-cts                     Run gl-cts
   --run-deqp-gles2-cts             Run dEQP GLES2
   --run-deqp-gles3-cts             Run dEQP GLES3
   --run-deqp-gles31-cts            Run dEQP GLES31
+  --run-crucible                   Run crucible
   --run-piglit                     Run piglit
   --create-piglit-report           Create results report
   --patterns-file <path>           <path> to the patterns file
@@ -615,6 +652,12 @@ do
 	shift
 	FPR_DEQP_BUILD_PATH=$1
 	;;
+    # PATH to the built Crucible binary
+    --crucible-path)
+	check_option_args $1 $2
+	shift
+	FPR_CRUCIBLE_BUILD_PATH=$1
+	;;
     # Prefix to use with the vk-cts run
     --vk-cts-prefix)
 	check_option_args $1 $2
@@ -645,6 +688,12 @@ do
 	shift
 	FPR_DEQP_GLES31_PREFIX=$1
 	;;
+    # Prefix to use with the crucible run
+    --crucible-prefix)
+	check_option_args $1 $2
+	shift
+	FPR_CRUCIBLE_PREFIX=$1
+	;;
     # Prefix to use with the piglit run
     --piglit-prefix)
 	check_option_args $1 $2
@@ -674,6 +723,10 @@ do
     # Run piglit
     --run-piglit)
 	FPR_RUN_PIGLIT=true
+	;;
+    # Run crucible
+    --run-crucible)
+	FPR_RUN_CRUCIBLE=true
 	;;
     # Create results report
     --create-piglit-report)
@@ -733,6 +786,7 @@ FPR_PIGLIT_PATH="${FPR_PIGLIT_PATH:-${FPR_DEV_PATH}/piglit.git}"
 FPR_PIGLIT_RESULTS_PATH="${FPR_PIGLIT_RESULTS_PATH:-${FPR_DEV_PATH}/piglit-results}"
 FPR_VK_GL_CTS_BUILD_PATH="${FPR_VK_GL_CTS_BUILD_PATH:-${FPR_DEV_PATH}/vk-gl-cts.git/build}"
 FPR_DEQP_BUILD_PATH="${FPR_DEQP_BUILD_PATH:-${FPR_DEV_PATH}/android-deqp/external/deqp/}"
+FPR_CRUCIBLE_BUILD_PATH="${FPR_CRUCIBLE_BUILD_PATH:-${FPR_DEV_PATH}/crucible.git}"
 
 # Prefixes:
 # ---------
@@ -742,6 +796,7 @@ FPR_GL_CTS_PREFIX="${FPR_GL_CTS_PREFIX:-GL-CTS}"
 FPR_DEQP_GLES2_PREFIX="${FPR_DEQP_GLES2_PREFIX:-DEQP2}"
 FPR_DEQP_GLES3_PREFIX="${FPR_DEQP_GLES3_PREFIX:-DEQP3}"
 FPR_DEQP_GLES31_PREFIX="${FPR_DEQP_GLES31_PREFIX:-DEQP31}"
+FPR_CRUCIBLE_PREFIX="${FPR_CRUCIBLE_PREFIX:-crucible}"
 FPR_PIGLIT_PREFIX="${FPR_PIGLIT_PREFIX:-all}"
 
 # What tests to run?
@@ -753,6 +808,7 @@ FPR_RUN_DEQP_GLES2="${FPR_RUN_DEQP_GLES2:-false}"
 FPR_RUN_DEQP_GLES3="${FPR_RUN_DEQP_GLES3:-false}"
 FPR_RUN_DEQP_GLES31="${FPR_RUN_DEQP_GLES31:-false}"
 FPR_RUN_PIGLIT="${FPR_RUN_PIGLIT:-false}"
+FPR_RUN_CRUCIBLE="${FPR_RUN_CRUCIBLE-false}"
 
 # Run the tests concurrently?
 # ---------------------------
