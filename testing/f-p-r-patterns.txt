@@ -5,21 +5,21 @@ forced-exclusion-softpipe-piglit: texcombine texCombine
 optional-exclusion-i965-piglit: arb_post_depth_coverage-multisampling arb_post_depth_coverage-sample-shading
 optional-exclusion-i965-piglit: arb_post_depth_coverage-basic
 optional-exclusion-i965-piglit: glx-oml-sync-control-swapbuffersmsc-divisor-zero glx-oml-sync-control-waitformsc
-optional-exclusion-i965-piglit: arb_timer_query-timestamp-get
-optional-exclusion-i965-piglit: ext_timer_query-time-elapsed
+optional-exclusion-i965-piglit: arb_timer_query@timestamp-get
+optional-exclusion-i965-piglit: ext_timer_query@time-elapsed
 optional-exclusion-i965-piglit: layer-gs-writes-in-range
 optional-exclusion-swr-piglit: glx-multi-context-ib-1
 optional-exclusion-swr-piglit: streaming-texture-leak
 optional-exclusion-swr-piglit: amd_shader_trinary_minmax.*fs-mid3-ivec2-ivec2-ivec2 amd_shader_trinary_minmax.*vs-min3-ivec2-ivec2-ivec2 amd_shader_trinary_minmax.*fs-min3-int-int-int amd_shader_trinary_minmax.*vs-max3-int-int-int amd_shader_trinary_minmax.*fs-mid3-int-int-int amd_shader_trinary_minmax.*vs-min3-int-int-int
-optional-exclusion-swr-piglit: ext_transform_feedback-immediate-reuse-index-buffer
+optional-exclusion-swr-piglit: ext_transform_feedback@immediate-reuse-index-buffer
 optional-exclusion-swr-piglit: fs-op-ne-bvec4-bvec4 fs-op-ne-bvec4-bvec4-using-if fs-op-eq-bvec4-bvec4 fs-op-eq-bvec4-bvec4-using-if vs-op-selection-bool-bvec4-bvec4 vs-op-eq-bvec4-bvec4-using-if
 optional-exclusion-swr-piglit: tex-miplevel-selection
 optional-exclusion-swr-piglit: fs-clamp-int-int-int vs-clamp-int-int-int
 optional-exclusion-i965-gl-cts: program_interface_query.*invalid-enum
 optional-exclusion-i965-gl-cts: shader_subroutine.*ssbo_atomic_image_load_store
 optional-exclusion-i965-piglit: glx-oml-sync-control-timing glx-copy-sub-buffer glx-multithread-texture
-optional-exclusion-i965-piglit: arb_query_buffer_object-qbo
-optional-exclusion-i965-piglit: ext_framebuffer_multisample-accuracy
+optional-exclusion-i965-piglit: arb_query_buffer_object@qbo
+optional-exclusion-i965-piglit: ext_framebuffer_multisample@accuracy
 optional-exclusion-anv-vk-cts: render_to_image.*2d_array.*huge.*layers
 optional-exclusion-softpipe-piglit: triangle-rasterization
 optional-exclusion-llvmpipe-piglit: glx-multithread-shader-compile
