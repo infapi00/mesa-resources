@@ -9,8 +9,8 @@
       href="git://anongit.freedesktop.org/git"/>
   <repository type="git" name="wayland" default="yes"
       href="git://anongit.freedesktop.org/git/wayland"/>
-  <repository type="git" name="mesa" default="yes"
-      href="git://anongit.freedesktop.org/git/mesa"/>
+  <repository type="git" name="mesa-gitlab" default="yes"
+      href="git@gitlab.freedesktop.org:mesa"/>
   <repository type="git" name="xorg-util" default="yes"
       href="git://anongit.freedesktop.org/git/xorg/util"/>
   <repository type="git" name="xorgproto" default="yes"
@@ -48,7 +48,7 @@
   </autotools>
 
   <autotools id="drm" autogenargs="--enable-nouveau-experimental-api --enable-etnaviv-experimental-api --enable-freedreno --enable-vc4">
-    <branch repo="mesa"/>
+    <branch repo="mesa-gitlab"/>
   </autotools>
 
  <autotools id="proto">
@@ -72,7 +72,7 @@
   </autotools>
 
   <meson id="mesa" mesonargs="-Dplatforms=x11,drm -Dgallium-drivers=">
-    <branch repo="mesa" branch="9.1"/>
+    <branch repo="mesa-gitlab" branch="9.1"/>
     <dependencies>
       <dep package="drm"/>
       <dep package="libX11"/>
@@ -83,7 +83,7 @@
   </meson>
 
   <autotools id="demos" autogenargs="--enable-egl --enable-gles1 --enable-gles2">
-    <branch repo="mesa"/>
+    <branch repo="mesa-gitlab"/>
     <dependencies>
       <dep package="mesa"/>
     </dependencies>
@@ -94,7 +94,7 @@
   </cmake>
 
   <cmake id="piglit">
-    <branch repo="freedesktop"/>
+    <branch repo="mesa-gitlab"/>
     <dependencies>
       <dep package="waffle"/>
     </dependencies>
