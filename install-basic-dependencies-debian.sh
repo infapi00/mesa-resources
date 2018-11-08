@@ -12,4 +12,4 @@ apt-get install libxcb-randr0-dev libxrandr-dev libxcb-xinerama0-dev \
         llvm-dev libva-dev glew-utils libglew-dev x11proto-randr-dev emacs-nox \
         emacs x11proto-present-dev libclc-dev libelf-dev libclang-dev sudo \
         intel-microcode firmware-linux git build-essential firmware-iwlwifi \
-        python-gtk2-dev vim apitrace mesa-utils
+        python-gtk2-dev vim apitrace mesa-utils libvulkan-dev
