@@ -5,4 +5,4 @@ apt-get install git autoconf autopoint pkg-config yelp-tools gettext \
      libxdamage-dev libudev-dev libexpat1-dev libxrandr-dev libxmu-dev \
      zlib1g-dev libpng-dev libgcrypt11-dev libexpat1-dev \
      libwayland-dev g++ cmake python-git clang-format-3.9 \
-     python-numpy python3-numpy
+     python-numpy python3-numpy libvulkan-dev
