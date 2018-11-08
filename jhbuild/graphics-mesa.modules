@@ -28,7 +28,10 @@
   <repository type="git" name="github-apitrace"
       href="git://github.com/apitrace"/>
   <repository type="git" name="github"
-      href="git://github.com/"/>
+              href="git://github.com/"/>
+  <repository type="git" name="github-igalia"
+              href="git@github.com:Igalia"/>
+
 <repository type="tarball" name="xorg-tar"
     href="http://xorg.freedesktop.org/"/>
   <repository type="tarball" name="github-tar"
@@ -90,10 +93,15 @@
     <branch repo="waffle-gl"/>
   </cmake>
 
+  <cmake id="vkrunner">
+    <branch repo="github-igalia"/>
+  </cmake>
+
   <cmake id="piglit">
     <branch repo="mesa-gitlab"/>
     <dependencies>
       <dep package="waffle"/>
+      <dep package="vkrunner"/>
     </dependencies>
   </cmake>
 
