@@ -32,10 +32,21 @@
   <repository type="git" name="github-igalia"
               href="https://github.com/Igalia"/>
 
-<repository type="tarball" name="xorg-tar"
+  <repository type="tarball" name="xorg-tar"
     href="http://xorg.freedesktop.org/"/>
   <repository type="tarball" name="github-tar"
       href="https://github.com/"/>
+
+  <distutils id="meson" python3="1">
+    <branch repo="github-tar"
+            version="0.49.0"
+            module="mesonbuild/meson/releases/download/${version}/meson-${version}.tar.gz"
+            checkoutdir="meson-${version}">
+    </branch>
+    <dependencies>
+      <dep package="ninja"/>
+    </dependencies>
+  </distutils>
 
   <autotools id="pixman">
     <branch repo="freedesktop"/>
@@ -73,6 +84,7 @@
   <meson id="mesa" mesonargs="-Dplatforms=x11,drm -Dgallium-drivers=">
     <branch repo="mesa-gitlab" branch="9.1"/>
     <dependencies>
+      <dep package="meson"/>
       <dep package="drm"/>
       <dep package="libX11"/>
       <dep package="libxcb"/>
