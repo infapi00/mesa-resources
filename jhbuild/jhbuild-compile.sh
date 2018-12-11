@@ -19,6 +19,6 @@ fi
 pushd ${JHBUILD_MESA_ROOT}/jhbuild.git && git pull
 ./autogen.sh --prefix=${JHBUILD_MESA_ROOT}/jhbuild-install && make && make install
 popd
-#${JHBUILD_MESA_ROOT}/jhbuild-install/bin/jhbuild -f ${FULL_BASE_PATH}/jhbuildrc-basic sysdeps --install
-#${JHBUILD_MESA_ROOT}/jhbuild-install/bin/jhbuild -f ${FULL_BASE_PATH}/jhbuildrc-basic build -f --nodeps
-${JHBUILD_MESA_ROOT}/jhbuild-install/bin/jhbuild -f ${FULL_BASE_PATH}/jhbuildrc-basic build --nodeps
+#${JHBUILD_MESA_ROOT}/jhbuild-install/bin/jhbuild -f ${FULL_BASE_PATH}/jhbuildrc-expert sysdeps --install
+#${JHBUILD_MESA_ROOT}/jhbuild-install/bin/jhbuild -f ${FULL_BASE_PATH}/jhbuildrc-expert build -f --nodeps
+${JHBUILD_MESA_ROOT}/jhbuild-install/bin/jhbuild -f ${FULL_BASE_PATH}/jhbuildrc-expert build --nodeps
