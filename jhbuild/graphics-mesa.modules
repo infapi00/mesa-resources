@@ -24,7 +24,7 @@
   <repository type="git" name="waffle-gl" default="yes"
       href="git://github.com/waffle-gl"/>
   <repository type="git" name="gnome" default="yes"
-      href="git://git.gnome.org"/>
+      href="https://gitlab.gnome.org/GNOME"/>
   <repository type="git" name="github-apitrace"
       href="git://github.com/apitrace"/>
   <repository type="git" name="github"
