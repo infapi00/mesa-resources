@@ -11,4 +11,4 @@
 
 source ./jhbuild-helper.sh
 
-${JHBUILD_MESA_ROOT}/jhbuild-install/bin/jhbuild -f ${FULL_BASE_PATH}/jhbuildrc-basic $@
+${JHBUILD_MESA_ROOT}/jhbuild-install/bin/jhbuild -f ${FULL_BASE_PATH}/jhbuildrc-expert $@
