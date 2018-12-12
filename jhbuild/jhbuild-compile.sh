@@ -14,7 +14,7 @@
 source ./jhbuild-helper.sh
 
 if [ ! -d ${JHBUILD_MESA_ROOT}/jhbuild.git ]; then
-    git clone git://git.gnome.org/jhbuild ${JHBUILD_MESA_ROOT}/jhbuild.git
+    git clone https://gitlab.gnome.org/GNOME/jhbuild.git ${JHBUILD_MESA_ROOT}/jhbuild.git
 fi
 pushd ${JHBUILD_MESA_ROOT}/jhbuild.git && git pull
 ./autogen.sh --prefix=${JHBUILD_MESA_ROOT}/jhbuild-install && make && make install
