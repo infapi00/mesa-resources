@@ -61,9 +61,9 @@
     </dependencies>
   </autotools>
 
-  <autotools id="drm" autogenargs="--enable-nouveau-experimental-api --enable-etnaviv-experimental-api --enable-freedreno --enable-vc4">
+  <meson id="drm" mesonargs="-Dfreedreno=true -Detnaviv=true -Dvc4=true">
     <branch repo="mesa-gitlab"/>
-  </autotools>
+  </meson>
 
  <autotools id="proto">
     <branch repo="xcb"/>
