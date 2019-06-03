@@ -10,4 +10,4 @@ apt-get install libxcb-randr0-dev libxrandr-dev libxcb-xinerama0-dev \
         libxcb-glx0-dev libx11-xcb-dev libxext-dev libxdamage-dev libxfixes-dev \
         llvm-dev libva-dev x11proto-randr-dev  \
         x11proto-present-dev libclc-dev libelf-dev libclang-dev sudo \
-        git build-essential mesa-utils libvulkan-dev
+        git build-essential mesa-utils libvulkan-dev ninja-build
