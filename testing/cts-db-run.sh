@@ -6,6 +6,14 @@
 #
 # WARNING: it executes each test separately 3 times, in order to get results for
 # each of the shader; try to keep the list of tests limited.
+#
+# Example of use:
+#
+# cts-db-run.sh  Projects/mesa/vk-gl-cts/_build/external/vulkancts/modules/vulkan/deqp-vk  dEQP-VK.glsl.builtin.precision.asin.* | tee original
+# # Do proper changes in code
+# cts-db-run.sh  Projects/mesa/vk-gl-cts/_build/external/vulkancts/modules/vulkan/deqp-vk  dEQP-VK.glsl.builtin.precision.asin.* | tee modified
+# # Create report
+# ~/shader-db/report original modified
 
 
 if [ $# != 2 ]; then
