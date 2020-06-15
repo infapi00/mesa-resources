@@ -12,6 +12,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("fps_file", help="fps file")
+    parser.add_argument("-max_samples", nargs='?', const=0, type=int, help="max number of samples to use")
 
     args = parser.parse_args()
 
@@ -22,8 +23,16 @@ def main():
     total_value = 0
     min_fps = 666
     max_fps = 0
+    max_samples = 0
+    if args.max_samples is not None:
+        max_samples = args.max_samples
+    else:
+        max_samples = -1
 
     for line in lines:
+        if max_samples > 0 and num_lines >= max_samples:
+            break
+
         if line and line != "fps, frame_timing(us)":
             parsed_line = line.split(',')
 
