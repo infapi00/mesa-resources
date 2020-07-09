@@ -70,6 +70,47 @@
 
  <autotools id="proto">
     <branch repo="xcb"/>
+ </autotools>
+
+ <autotools id="xorgproto">
+   <branch repo="xorgproto"/>
+ </autotools>
+
+  <autotools id="libXau">
+    <branch repo="xorg-lib"/>
+    <dependencies>
+      <dep package="xorgproto"/>
+    </dependencies>
+  </autotools>
+
+  <autotools id="libXext">
+    <branch repo="xorg-lib"/>
+  </autotools>
+
+  <autotools id="libXdamage">
+    <dependencies>
+      <dep package="libXfixes"/>
+    </dependencies>
+    <branch repo="xorg-lib"/>
+  </autotools>
+
+  <autotools id="libXfixes">
+    <branch repo="xorg-lib"/>
+  </autotools>
+
+  <autotools id="libXxf86vm">
+    <branch repo="xorg-lib"/>
+  </autotools>
+
+  <autotools id="libXrender">
+    <branch repo="xorg-lib"/>
+  </autotools>
+
+  <autotools id="libXrandr">
+    <branch repo="xorg-lib"/>
+    <dependencies>
+      <dep package="libXrender"/>
+    </dependencies>
   </autotools>
 
   <autotools id="libxcb">
@@ -77,11 +118,15 @@
     <dependencies>
       <dep package="proto"/>
       <dep package="macros"/>
+      <dep package="libXau"/>
     </dependencies>
   </autotools>
 
   <autotools id="libxshmfence">
     <branch repo="xorg-lib"/>
+    <dependencies>
+      <dep package="xorgproto"/>
+    </dependencies>
   </autotools>
 
   <autotools id="wayland-protocols">
@@ -97,6 +142,10 @@
       <dep package="libxcb"/>
       <dep package="libxshmfence"/>
       <dep package="wayland-protocols"/>
+      <dep package="libXext"/>
+      <dep package="libXdamage"/>
+      <dep package="libXxf86vm"/>
+      <dep package="libXrandr"/>
     </dependencies>
   </meson>
 
