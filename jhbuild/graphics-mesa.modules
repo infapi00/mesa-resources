@@ -31,7 +31,8 @@
               href="git://github.com/"/>
   <repository type="git" name="github-igalia"
               href="https://github.com/Igalia"/>
-
+  <repository type="git" name="github-khronos"
+              href="https://github.com/KhronosGroup"/>
   <repository type="tarball" name="xorg-tar"
     href="http://xorg.freedesktop.org/"/>
   <repository type="tarball" name="github-tar"
@@ -125,6 +126,12 @@
          skip-install="true">
      <branch repo="android"
              module="deqp"/>
+  </cmake>
+
+  <cmake id="vk-gl-cts"
+         skip-install="true">
+     <branch repo="github-khronos"
+             module="VK-GL-CTS"/>
   </cmake>
 
   <cmake id="apitrace">
