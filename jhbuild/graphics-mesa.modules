@@ -33,6 +33,8 @@
               href="https://github.com/Igalia"/>
   <repository type="git" name="github-khronos"
               href="https://github.com/KhronosGroup"/>
+  <repository type="git" name="gitlab-apinheiro" default="yes"
+      href="git@gitlab.freedesktop.org:apinheiro" />
   <repository type="tarball" name="xorg-tar"
     href="http://xorg.freedesktop.org/"/>
   <repository type="tarball" name="github-tar"
@@ -133,6 +135,12 @@
      <branch repo="github-khronos"
              module="VK-GL-CTS"/>
   </cmake>
+
+  <meson id="parallel-deqp-runner">
+    <branch repo="gitlab-apinheiro"
+            module="parallel-deqp-runner"
+            revision="apinheiro/add-report-script"/>
+  </meson>
 
   <cmake id="apitrace">
     <branch repo="github-apitrace"/>
