@@ -1,11 +1,11 @@
 #!/bin/bash
 #
-# The purpose of this script is run a deqp/cts test n times
-# counting the number of times that pass and fail. It is
-# useful to debug flaky tests. In order to not lose the
-# test debug info (on TestResults.qpa) for each execution
-# it copies it to TestResults_PASS or TestResults_FAILS
-# respectively.
+# The purpose of this script is run a deqp/cts test n times counting
+# the number of times that pass and fail. It is useful to debug flaky
+# tests. In order to not lose the test debug info (on TestResults.qpa)
+# for each execution it copies it to
+# TestResults_${index}_PASS_${pass_index} or
+# TestResults_${index}_FAILS_${fail_index} respectively
 
 if [ $# -lt 2 ]
 then
@@ -22,10 +22,10 @@ do
     if [ $($@ | grep "Passed:        1/1"  | wc -l) -eq 1 ]
     then
         ((PASS=PASS+1))
-        mv "TestResults.qpa" "TestResults_PASS"$PASS".qpa"
+        mv "TestResults.qpa" "TestResults_"$i"_PASS_"$PASS".qpa"
     else
         ((FAIL=FAIL+1))
-        mv "TestResults.qpa" "TestResults_FAIL"$FAIL".qpa"
+        mv "TestResults.qpa" "TestResults_"$i"_FAIL_"$FAIL".qpa"
     fi
 done
 
