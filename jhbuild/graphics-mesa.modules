@@ -131,7 +131,7 @@
     <branch repo="wayland"/>
   </autotools>
 
-  <meson id="mesa" mesonargs="-Dplatforms=x11,drm -Dgallium-drivers=">
+  <meson id="mesa" mesonargs="-Dplatforms=x11 -Dgallium-drivers=">
     <branch repo="mesa-gitlab" branch="9.1"/>
     <dependencies>
       <dep package="meson"/>
