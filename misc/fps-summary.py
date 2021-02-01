@@ -19,37 +19,51 @@ def main():
     file = open(args.fps_file, "r")
     lines = file.read().split('\n')
 
-    num_lines = 0
+    current_line = 0
     total_value = 0
     min_fps = 666
     max_fps = 0
     max_samples = 0
+    fps_index = -1
     if args.max_samples is not None:
         max_samples = args.max_samples
     else:
         max_samples = -1
 
     for line in lines:
-        if max_samples > 0 and num_lines >= max_samples:
+        parsed_line = line.split(', ')
+
+        # Assumes that the first line would be the header
+        if current_line == 0:
+            word_count = 0;
+            for word in parsed_line:
+                if (word == 'fps'):
+                    fps_index = word_count
+                    break
+                word_count += 1
+
+            if (fps_index == -1):
+                print("'fps' column not found (missing header?)")
+                break
+
+        if max_samples > 0 and current_line + 1 >= max_samples:
             break
 
-        if line and line != "fps, frame_timing(us)":
-            parsed_line = line.split(',')
-
-            fps = parsed_line[0]
-            frame_timing = parsed_line[1]
+        if line and current_line > 0:
+            fps = parsed_line[fps_index]
 
             total_value += float(fps)
             min_fps = min(min_fps, float(fps))
             max_fps = max(max_fps, float(fps))
 
-            num_lines += 1
+        current_line += 1
 
-    avg_fps = total_value / num_lines
+    if (current_line > 0):
+        avg_fps = total_value / current_line
 
-    print("avg_fps: ", avg_fps)
-    print("min_fps: ", min_fps)
-    print("max_fps: ", max_fps)
+        print("avg_fps: ", avg_fps)
+        print("min_fps: ", min_fps)
+        print("max_fps: ", max_fps)
 
 if __name__ == "__main__":
     main()
