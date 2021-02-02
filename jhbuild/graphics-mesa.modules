@@ -260,9 +260,9 @@
   </autotools>
 
 
-  <autotools id="glib">
+  <meson id="glib">
     <branch repo="gnome"/>
-  </autotools>
+  </meson>
 
   <autotools id="gobject-introspection">
     <branch repo="gnome"/>
