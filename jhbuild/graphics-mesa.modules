@@ -250,14 +250,14 @@
     <branch repo="xorg-lib"/>
   </autotools>
 
-  <autotools id="libxkbcommon" autogenargs="--with-xkb-config-root=/usr/share/X11/xkb">
+  <meson id="libxkbcommon" mesonargs="-Dxkb-config-root=/usr/share/X11/xkb">
     <branch repo="github" module="xkbcommon/libxkbcommon.git"/>
     <dependencies>
       <dep package="macros"/>
       <dep package="xproto"/>
       <dep package="libX11"/>
     </dependencies>
-  </autotools>
+  </meson>
 
 
   <meson id="glib">
