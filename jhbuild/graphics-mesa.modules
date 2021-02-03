@@ -213,18 +213,18 @@
     </dependencies>
   </autotools>
 
-  <autotools id="wayland" autogenargs="--with-egl-platforms=wayland,drm,x11">
+  <autotools id="wayland" autogenargs="--with-egl-platforms=wayland,drm,x11 --disable-documentation">
     <branch repo="wayland"/>
   </autotools>
 
-  <autotools id="weston" autogenargs="--disable-setuid-install">
+  <meson id="weston" mesonargs="-Dbackend-rdp=false -Dcolor-management-lcms=false -Dcolor-management-colord=false -Dremoting=false -Dpipewire=false">
     <branch repo="wayland"/>
     <dependencies>
       <dep package="wayland"/>
       <dep package="cairo"/>
       <dep package="libxkbcommon"/>
     </dependencies>
-  </autotools>
+  </meson>
 
   <autotools id="macros">
     <branch repo="xorg-util"/>
@@ -250,19 +250,19 @@
     <branch repo="xorg-lib"/>
   </autotools>
 
-  <autotools id="libxkbcommon" autogenargs="--with-xkb-config-root=/usr/share/X11/xkb">
+  <meson id="libxkbcommon" mesonargs="-Dxkb-config-root=/usr/share/X11/xkb -Denable-docs=false">
     <branch repo="github" module="xkbcommon/libxkbcommon.git"/>
     <dependencies>
       <dep package="macros"/>
       <dep package="xproto"/>
       <dep package="libX11"/>
     </dependencies>
-  </autotools>
+  </meson>
 
 
-  <autotools id="glib">
+  <meson id="glib">
     <branch repo="gnome"/>
-  </autotools>
+  </meson>
 
   <autotools id="gobject-introspection">
     <branch repo="gnome"/>
