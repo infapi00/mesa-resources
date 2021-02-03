@@ -217,14 +217,14 @@
     <branch repo="wayland"/>
   </autotools>
 
-  <autotools id="weston" autogenargs="--disable-setuid-install">
+  <meson id="weston">
     <branch repo="wayland"/>
     <dependencies>
       <dep package="wayland"/>
       <dep package="cairo"/>
       <dep package="libxkbcommon"/>
     </dependencies>
-  </autotools>
+  </meson>
 
   <autotools id="macros">
     <branch repo="xorg-util"/>
