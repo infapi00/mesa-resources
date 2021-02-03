@@ -250,7 +250,7 @@
     <branch repo="xorg-lib"/>
   </autotools>
 
-  <meson id="libxkbcommon" mesonargs="-Dxkb-config-root=/usr/share/X11/xkb">
+  <meson id="libxkbcommon" mesonargs="-Dxkb-config-root=/usr/share/X11/xkb -Denable-docs=false">
     <branch repo="github" module="xkbcommon/libxkbcommon.git"/>
     <dependencies>
       <dep package="macros"/>
