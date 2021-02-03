@@ -217,7 +217,7 @@
     <branch repo="wayland"/>
   </autotools>
 
-  <meson id="weston">
+  <meson id="weston" mesonargs="-Dbackend-rdp=false -Dcolor-management-lcms=false -Dcolor-management-colord=false -Dremoting=false -Dpipewire=false">
     <branch repo="wayland"/>
     <dependencies>
       <dep package="wayland"/>
