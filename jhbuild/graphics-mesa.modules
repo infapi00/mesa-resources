@@ -11,6 +11,8 @@
       href="git://anongit.freedesktop.org/git/wayland"/>
   <repository type="git" name="mesa-gitlab" default="yes"
       href="https://gitlab.freedesktop.org/mesa"/>
+  <repository type="git" name="drm-gitlab" default="yes"
+      href="https://gitlab.freedesktop.org/drm"/>
   <repository type="git" name="xorg-util" default="yes"
       href="git://anongit.freedesktop.org/git/xorg/util"/>
   <repository type="git" name="xorgproto" default="yes"
@@ -360,4 +362,12 @@
   <cmake id="freerdp">
     <branch repo="github" module="FreeRDP/FreeRDP" revision="master"/>
   </cmake>
+
+  <meson id="igt-gpu-tools">
+    <branch repo="drm-gitlab"/>
+    <dependencies>
+      <dep package="drm"/>
+      <dep package="cairo"/>
+    </dependencies>
+  </meson>
 </moduleset>
