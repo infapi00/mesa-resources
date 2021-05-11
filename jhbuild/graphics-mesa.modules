@@ -128,11 +128,11 @@
   </autotools>
 
   <autotools id="wayland-protocols">
-    <branch repo="wayland"/>
+    <branch repo="wayland" revision="main"/>
   </autotools>
 
   <meson id="mesa" mesonargs="-Dplatforms=x11 -Dgallium-drivers=">
-    <branch repo="mesa-gitlab" branch="9.1"/>
+    <branch repo="mesa-gitlab" branch="9.1" revision="main"/>
     <dependencies>
       <dep package="meson"/>
       <dep package="drm"/>
