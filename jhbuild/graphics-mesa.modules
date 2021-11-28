@@ -65,7 +65,7 @@
   </autotools>
 
   <meson id="drm" mesonargs="-Dnouveau=true -Detnaviv=true -Dfreedreno=true -Dvc4=true">
-    <branch repo="mesa-gitlab"/>
+    <branch repo="mesa-gitlab" revision="main"/>
   </meson>
 
  <autotools id="proto">
