@@ -129,13 +129,13 @@
     </dependencies>
   </autotools>
 
-  <autotools id="wayland-protocols">
+  <meson id="wayland-protocols">
     <branch repo="wayland" revision="main"/>
     <dependencies>
       <!-- for wayland-scanner -->
       <dep package="wayland"/>
     </dependencies>
-  </autotools>
+  </meson>
 
   <meson id="mesa" mesonargs="-Dplatforms=x11 -Dgallium-drivers=">
     <branch repo="mesa-gitlab" branch="9.1" revision="main"/>
