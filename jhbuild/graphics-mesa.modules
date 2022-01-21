@@ -219,9 +219,9 @@
     </dependencies>
   </autotools>
 
-  <autotools id="wayland" autogenargs="--with-egl-platforms=wayland,drm,x11 --disable-documentation">
+  <meson id="wayland" mesonargs="-Ddocumentation=false">
     <branch repo="wayland"/>
-  </autotools>
+  </meson>
 
   <meson id="weston" mesonargs="-Dbackend-rdp=false -Dcolor-management-lcms=false -Dcolor-management-colord=false -Dremoting=false -Dpipewire=false">
     <branch repo="wayland"/>
