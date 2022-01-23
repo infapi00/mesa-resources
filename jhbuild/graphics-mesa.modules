@@ -160,9 +160,9 @@
     </dependencies>
   </autotools>
 
-  <cmake id="waffle" cmakeargs="-Dwaffle_has_glx=1">
+  <meson id="waffle" mesonargs="-Dglx=enabled">
     <branch repo="mesa-gitlab"/>
-  </cmake>
+  </meson>
 
   <cmake id="vkrunner">
     <branch repo="github-igalia"/>
