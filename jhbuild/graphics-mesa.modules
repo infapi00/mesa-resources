@@ -42,7 +42,7 @@
 
   <distutils id="meson" python3="1">
     <branch repo="github-tar"
-            version="0.54.0"
+            version="0.58.0"
             module="mesonbuild/meson/releases/download/${version}/meson-${version}.tar.gz"
             checkoutdir="meson-${version}">
     </branch>
