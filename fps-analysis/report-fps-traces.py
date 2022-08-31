@@ -84,25 +84,36 @@ def get_results(filename):
 
     return results
 
+def process_one_result(list):
+    fps_accum = 0
+    fps_max = 0
+    fps_min = sys.float_info.max
+
+    for fps in list:
+        fps_accum += fps
+        fps_max = max(fps, fps_max)
+        fps_min = min(fps, fps_min)
+
+    fps_avg = fps_accum / len(list)
+
+    return [fps_min, fps_max, fps_avg]
 
 def process_results(raw, args):
     results = {}
 
     for key in raw:
-        fps_list = raw[key]
-        fps_accum = 0
-        fps_max = 0
-        fps_min = sys.float_info.max
+        [fps_min, fps_max, fps_avg] = process_one_result(raw[key])
 
-        for fps in raw[key]:
-            fps_accum += fps
-            fps_max = max(fps, fps_max)
-            fps_min = min(fps, fps_min)
+        if args.skip_min_max and len(raw[key]) >= 3:
+            raw[key].remove(fps_min)
+            raw[key].remove(fps_max)
+
+            [fps_min, fps_max, fps_avg] = process_one_result(raw[key])
 
         result_group = {}
         result_group['fps_min'] = fps_min
         result_group['fps_max'] = fps_max
-        result_group['fps_avg'] = fps_accum / len(raw[key])
+        result_group['fps_avg'] = fps_avg
         results[key] = result_group
 
     return results
@@ -116,8 +127,10 @@ def main():
                         help="Do not show the trace helped / hurt data")
     parser.add_argument("--skip-gfxrecon", action="store_true", help="If we should skip gfxreconstruct traces")
     parser.add_argument("--skip-apitrace", action="store_true", help="If we should skip apitrace traces")
+    parser.add_argument("--skip-min-max", action="store_true", help="If we should remove one fps_min/max from the list of samples")
 
     args = parser.parse_args()
+
 
     measurements = ["fps_min", "fps_max", "fps_avg"]
 
