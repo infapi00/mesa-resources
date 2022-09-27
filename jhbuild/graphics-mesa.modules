@@ -220,7 +220,7 @@
   </autotools>
 
   <meson id="wayland" mesonargs="-Ddocumentation=false">
-    <branch repo="wayland"/>
+    <branch repo="wayland" revision="main"/>
   </meson>
 
   <meson id="weston" mesonargs="-Dbackend-rdp=false -Dcolor-management-lcms=false -Dcolor-management-colord=false -Dremoting=false -Dpipewire=false">
