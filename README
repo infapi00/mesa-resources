@@ -5,9 +5,6 @@ A brief description of what it contains:
  * jhbuild: a custom moduleset, and a template jhbuildrc file for mesa
    and piglit building
 
- * install-basic-dependencies.sh: script that install the basic system
-   dependencies for working on mesa.
-
  * deqp: basic stuff for deqp.
 
  * piglit: basic stuff for piglit.
