@@ -53,9 +53,8 @@
   <!-- cmakes ./configure is picky about invalid flags so we manually set it -->
   <autotools id="cmake" autogen-template="%(srcdir)s/configure --prefix=%(prefix)s">
     <branch repo="cmake"
-            module="v3.11/cmake-${version}.tar.gz" version="3.11.0"
-            size="7948287"
-            hash="sha256:c313bee371d4d255be2b4e96fd59b11d58bc550a7c78c021444ae565709a656b"/>
+            module="v3.27/cmake-${version}.tar.gz" version="3.27.0"
+            hash="sha256:aaeddb6b28b993d0a6e32c88123d728a17561336ab90e0bf45032383564d3cb8"/>
   </autotools>
 
   <autotools id="pixman">
