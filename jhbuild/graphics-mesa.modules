@@ -38,6 +38,8 @@
   <repository type="tarball" name="github-tar"
       href="https://github.com/"/>
   <repository type="tarball" name="cmake" href="http://www.cmake.org/files/"/>
+  <repository type="git" name="wayfire" default="yes"
+      href="git@github.com:WayfireWM"/>
 
   <distutils id="meson" python3="1">
     <branch repo="github-tar"
@@ -221,6 +223,10 @@
 
   <meson id="wayland" mesonargs="-Ddocumentation=false">
     <branch repo="wayland" revision="main"/>
+  </meson>
+
+  <meson id="wayfire">
+    <branch repo="wayfire" revision="master"/>
   </meson>
 
   <meson id="weston" mesonargs="-Dbackend-rdp=false -Dcolor-management-lcms=false -Dcolor-management-colord=false -Dremoting=false -Dpipewire=false">
