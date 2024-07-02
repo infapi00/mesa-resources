@@ -21,8 +21,10 @@
       href="git://anongit.freedesktop.org/git/xorg/lib"/>
   <repository type="git" name="xorg-doc" default="yes"
       href="git://anongit.freedesktop.org/git/xorg/doc"/>
- <repository type="git" name="xcb" default="yes"
-      href="git://anongit.freedesktop.org/git/xcb"/>
+ <repository type="git" name="xcbproto" default="yes"
+      href="https://gitlab.freedesktop.org/xorg/proto"/>
+  <repository type="git" name="xlib" default="yes"
+      href="https://gitlab.freedesktop.org/xorg/lib"/>
   <repository type="git" name="gnome" default="yes"
       href="https://gitlab.gnome.org/GNOME"/>
   <repository type="git" name="github-apitrace"
@@ -76,8 +78,8 @@
     <branch repo="mesa-gitlab" revision="main"/>
   </meson>
 
- <autotools id="proto">
-    <branch repo="xcb"/>
+ <autotools id="xcbproto">
+    <branch repo="xcbproto"/>
  </autotools>
 
  <autotools id="xorgproto">
@@ -122,9 +124,9 @@
   </autotools>
 
   <autotools id="libxcb">
-    <branch repo="xcb"/>
+    <branch repo="xlib"/>
     <dependencies>
-      <dep package="proto"/>
+      <dep package="xcbproto"/>
       <dep package="macros"/>
       <dep package="libXau"/>
     </dependencies>
