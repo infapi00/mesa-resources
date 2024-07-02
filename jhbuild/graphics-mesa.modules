@@ -8,17 +8,17 @@
   <repository type="git" name="freedesktop" default="yes"
       href="git://anongit.freedesktop.org/git"/>
   <repository type="git" name="wayland" default="yes"
-      href="git://anongit.freedesktop.org/git/wayland"/>
+      href="https://gitlab.freedesktop.org/wayland"/>
   <repository type="git" name="mesa-gitlab" default="yes"
       href="https://gitlab.freedesktop.org/mesa"/>
   <repository type="git" name="drm-gitlab" default="yes"
       href="https://gitlab.freedesktop.org/drm"/>
   <repository type="git" name="xorg-util" default="yes"
-      href="git://anongit.freedesktop.org/git/xorg/util"/>
+      href="https://gitlab.freedesktop.org/xorg/util/"/>
   <repository type="git" name="xorgproto" default="yes"
-      href="git://anongit.freedesktop.org/git/xorg/proto"/>
+      href="https://gitlab.freedesktop.org/xorg/proto"/>
   <repository type="git" name="xorg-lib" default="yes"
-      href="git://anongit.freedesktop.org/git/xorg/lib"/>
+      href="https://gitlab.freedesktop.org/xorg/lib"/>
   <repository type="git" name="xorg-doc" default="yes"
       href="git://anongit.freedesktop.org/git/xorg/doc"/>
  <repository type="git" name="xcbproto" default="yes"
