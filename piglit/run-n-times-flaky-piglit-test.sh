@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Run a piglit test n times, and returns how many runs have
+# passed. Useful for flaky tests.
+
 if [ $# -lt 2 ]
 then
     printf "Error - wrong number of parameters"
