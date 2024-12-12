@@ -1,0 +1,9 @@
+This directories includes small scripts to analyze direcly qpa
+files. Note that vk-gl-cts provides their own scripts but they can be
+slow:
+
+   * https://github.com/KhronosGroup/VK-GL-CTS/blob/master/external/openglcts/README.md#test-logs
+
+Also note that using that scripts would be needed to parse really big
+qpa files (like those coming from a conformance run), as sed would not
+handle files bigger that 2GB.
