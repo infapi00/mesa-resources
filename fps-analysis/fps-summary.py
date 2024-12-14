@@ -50,7 +50,7 @@ def main():
         if max_samples > 0 and num_samples >= max_samples:
             break
 
-        if current_line > 0:
+        if line and current_line > 0:
             fps = parsed_line[fps_index]
 
             total_value += float(fps)
