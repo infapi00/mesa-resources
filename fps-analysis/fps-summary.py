@@ -24,6 +24,7 @@ def main():
     min_fps = 666
     max_fps = 0
     max_samples = 0
+    num_samples = 0
     fps_index = -1
     if args.max_samples is not None:
         max_samples = args.max_samples
@@ -46,20 +47,21 @@ def main():
                 print("'fps' column not found (missing header?)")
                 break
 
-        if max_samples > 0 and current_line + 1 >= max_samples:
+        if max_samples > 0 and num_samples >= max_samples:
             break
 
-        if line and current_line > 0:
+        if current_line > 0:
             fps = parsed_line[fps_index]
 
             total_value += float(fps)
             min_fps = min(min_fps, float(fps))
             max_fps = max(max_fps, float(fps))
+            num_samples += 1
 
         current_line += 1
 
-    if (current_line > 0):
-        avg_fps = total_value / current_line
+    if (num_samples > 0):
+        avg_fps = total_value / num_samples
 
         print("avg_fps: ", avg_fps)
         print("min_fps: ", min_fps)
