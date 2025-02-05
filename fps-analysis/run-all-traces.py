@@ -34,6 +34,8 @@ def run_trace(args, filename, fps_file, num_samples):
         command += ['--log-level', 'fatal']
         if args.rebind:
             command += ['-m', 'rebind']
+        if args.headless:
+            command += ['--wsi', 'headless']
     elif file_extension == '.trace':
         if args.skip_apitrace:
             print("\tskipped")
@@ -41,6 +43,8 @@ def run_trace(args, filename, fps_file, num_samples):
         command = ['apitrace']
         command += ['replay']
         command += ['-b']
+        if args.headless:
+            command += ['--headless']
     else:
         print(f"File {filename} skipped: extension {file_extension} not recognized")
         return
@@ -127,8 +131,9 @@ def run_helper(args, traces_directory, results_directory):
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--rebind", nargs='?', default=False, type=bool, help="If we call gfxrecon-replay with -m rebind")
-    parser.add_argument("--disable-cache-run", action="store_true", default=False,
+    parser.add_argument("--rebind", action="store_true", help="If we call gfxrecon-replay with -m rebind")
+    parser.add_argument("--headless", action="store_true", help="If we run both apitrace/gfxrecon-replay headless")
+    parser.add_argument("--disable-cache-run", action="store_true",
                         help="By default we do a first run to ensure a hot shader cache, not included for the fps stats")
     parser.add_argument("--traces-directory", nargs='?', default="traces", type=str, help="Directory with the traces")
     parser.add_argument("--num-samples", nargs='?', default=1, type=int, help="Number of times each trace is executed to get the (averaged) fps value. Not include the shaderdb run")
