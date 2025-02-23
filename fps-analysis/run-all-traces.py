@@ -107,13 +107,20 @@ def run_trace(args, filename, fps_file, num_samples):
 # Note that although we provide a number of samples on the command
 # line arguments, we still need to pass it as a parameter, in order to
 # configure the initial cache warmup with a value of 1.
-def run_traces(args, traces_directory, fps_file, num_samples):
-    for filename in os.listdir(traces_directory):
-        f = os.path.join(traces_directory, filename)
-        if os.path.isfile(f):
-            run_trace(args, f, fps_file, num_samples)
+def run_traces(args, fps_file, num_samples):
+    for directory in args.traces_directory_list:
+        full_directory = os.path.expanduser(directory)
+        if args.verbose:
+            print(f"******* Current traces directory: {full_directory} *******")
+        for filename in os.listdir(full_directory):
+            f = os.path.join(full_directory, filename)
+            if os.path.isfile(f):
+                run_trace(args, f, fps_file, num_samples)
+            else:
+                if args.verbose:
+                    print(f"{f} is not a file")
 
-def run_helper(args, traces_directory, results_directory):
+def run_helper(args, results_directory):
     if os.path.exists(results_directory):
         shutil.rmtree(results_directory)
     os.mkdir(results_directory)
@@ -121,12 +128,12 @@ def run_helper(args, traces_directory, results_directory):
     if args.disable_cache_run is False:
         if args.verbose:
             print("Warming up shader cache")
-        run_traces(args, traces_directory, None, 1)
+        run_traces(args, None, 1)
 
     with open(results_directory + '/fps-stats.txt', 'w') as fps_file:
         if args.verbose:
             print("Starting FPS run")
-        run_traces(args, traces_directory, fps_file, args.num_samples)
+        run_traces(args, fps_file, args.num_samples)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -135,7 +142,7 @@ def main():
     parser.add_argument("--headless", action="store_true", help="If we run both apitrace/gfxrecon-replay headless")
     parser.add_argument("--disable-cache-run", action="store_true",
                         help="By default we do a first run to ensure a hot shader cache, not included for the fps stats")
-    parser.add_argument("--traces-directory", nargs='?', default="traces", type=str, help="Directory with the traces")
+    parser.add_argument("--traces-directory-list", nargs='+', default=["traces"], type=str, help="List of directories with the traces")
     parser.add_argument("--num-samples", nargs='?', default=1, type=int, help="Number of times each trace is executed to get the (averaged) fps value. Not include the shaderdb run")
     parser.add_argument("--skip-gfxrecon", action="store_true", help="If we should skip running the gfxreconstruct traces")
     parser.add_argument("--skip-apitrace", action="store_true", help="If we should skip running the apitrace traces")
@@ -153,10 +160,6 @@ def main():
         print("Both --skip-gfxrecon and --skip-apitrace options used. Nothing to do")
         return
 
-    traces_directory = os.path.expanduser(args.traces_directory)
-    if args.verbose:
-        print(f"Using traces directory: {traces_directory}")
-
     # We ensure that the on-disk-cache is enabled, as we want hot-cache fps numbers
     os.unsetenv("MESA_GLSL_CACHE_DISABLE")
     os.unsetenv("MESA_SHADER_CACHE_DISABLE")
@@ -165,7 +168,7 @@ def main():
     base_results_directory = "results"
 
     if (args.mesa_commit_list is None):
-        run_helper(args, traces_directory, base_results_directory)
+        run_helper(args, base_results_directory)
     else:
         index = 0
         for commit in args.mesa_commit_list:
@@ -187,7 +190,7 @@ def main():
                 print(f"ERROR building mesa at commit {commit} : {type(err).__name__} was raised: {err}")
                 return
 
-            run_helper(args, traces_directory, results_directory)
+            run_helper(args, results_directory)
 
             try:
                 subprocess.run(['git', 'switch', '-'], cwd=mesa_directory, check=True)
