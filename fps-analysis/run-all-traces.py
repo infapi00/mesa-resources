@@ -6,6 +6,7 @@
 # check the fps measures with a hot shader disk cache.
 #
 import argparse
+from datetime import datetime
 import os
 import pathlib
 import re
@@ -121,18 +122,17 @@ def run_traces(args, fps_file, num_samples):
                     print(f"{f} is not a file")
 
 def run_helper(args, results_directory):
-    if os.path.exists(results_directory):
-        shutil.rmtree(results_directory)
-    os.mkdir(results_directory)
+    if os.path.exists(results_directory) is False:
+        os.mkdir(results_directory)
 
     if args.disable_cache_run is False:
         if args.verbose:
             print("Warming up shader cache")
         run_traces(args, None, 1)
-
-    with open(results_directory + '/fps-stats.txt', 'w') as fps_file:
+    fps_file_name = results_directory + '/fps-stats-' + datetime.now().strftime("%Y-%m-%d_%H:%M:%S")+'.txt'
+    with open(fps_file_name, 'w') as fps_file:
         if args.verbose:
-            print("Starting FPS run")
+            print(f"Starting FPS run. Writing stats on file {fps_file_name}")
         run_traces(args, fps_file, args.num_samples)
 
 def main():
