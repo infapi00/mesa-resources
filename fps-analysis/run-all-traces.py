@@ -138,16 +138,17 @@ def run_helper(args, results_directory):
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--rebind", action="store_true", help="If we call gfxrecon-replay with -m rebind")
-    parser.add_argument("--headless", action="store_true", help="If we run both apitrace/gfxrecon-replay headless")
+    # Keep command line options sorted alphabetically
     parser.add_argument("--disable-cache-run", action="store_true",
                         help="By default we do a first run to ensure a hot shader cache, not included for the fps stats")
-    parser.add_argument("--traces-directory-list", nargs='+', default=["traces"], type=str, help="List of directories with the traces")
+    parser.add_argument("--headless", action="store_true", help="If we run both apitrace/gfxrecon-replay headless")
     parser.add_argument("--num-samples", nargs='?', default=1, type=int, help="Number of times each trace is executed to get the (averaged) fps value. Not include the shaderdb run")
-    parser.add_argument("--skip-gfxrecon", action="store_true", help="If we should skip running the gfxreconstruct traces")
-    parser.add_argument("--skip-apitrace", action="store_true", help="If we should skip running the apitrace traces")
-    parser.add_argument("--mesa-directory", nargs='?', type=str, help="Mesa directory. Useful if we pass a list of mesa commits")
     parser.add_argument("--mesa-commit-list", nargs='+', action="extend", type=str, help="List of mesa commits to execute the script against")
+    parser.add_argument("--mesa-directory", nargs='?', type=str, help="Mesa directory. Useful if we pass a list of mesa commits")
+    parser.add_argument("--rebind", action="store_true", help="If we call gfxrecon-replay with -m rebind")
+    parser.add_argument("--skip-apitrace", action="store_true", help="If we should skip running the apitrace traces")
+    parser.add_argument("--skip-gfxrecon", action="store_true", help="If we should skip running the gfxreconstruct traces")
+    parser.add_argument("--traces-directory-list", nargs='+', default=["traces"], type=str, help="List of directories with the traces")
     parser.add_argument("--verbose", action="store_true", default=False, help="Enable to print additional debug messages")
 
     args = parser.parse_args()
