@@ -31,15 +31,26 @@ def format_num(n):
         return "{:.2f}".format(n)
 
 
+def get_avg_std_deviation_string(b):
+    return "(" + format_num(b[0]) + " , " + format_num(b[1]) + ")"
+
+
 def change(b, a):
     return format_num(b) + " -> " + format_num(a) + get_delta(b, a)
 
 
-def get_result_string(p, b, a):
+def change_with_std_deviation(b, a):
+    return get_avg_std_deviation_string(b) + " -> " + get_avg_std_deviation_string(a) + get_delta(b[0], a[0])
+
+
+def get_result_string(p, b, a, args):
     p = p + ": "
     while len(p) < 50:
         p = p + ' '
-    return p + change(b, a)
+    if (args.show_std_deviation):
+        return p + change_with_std_deviation(b, a)
+    else:
+        return p + change(b[0], a[0])
 
 
 def get_results(filename, include_filter, exclude_filter):
@@ -70,6 +81,8 @@ def process_one_result(list):
     fps_accum = 0
     fps_max = 0
     fps_min = sys.float_info.max
+    std_deviation = 0
+    std_accum = 0
 
     for fps in list:
         fps_accum += fps
@@ -78,22 +91,30 @@ def process_one_result(list):
 
     fps_avg = fps_accum / len(list)
 
-    return [fps_min, fps_max, fps_avg]
+    for fps in list:
+        std_accum += pow(fps - fps_avg, 2)
+
+    std_deviation = math.sqrt(std_accum / len(list))
+
+    return [fps_min, fps_max, fps_avg, std_deviation]
 
 def process_results(raw, args):
     results = {}
 
     for key in raw:
-        [fps_min, fps_max, fps_avg] = process_one_result(raw[key])
+        [fps_min, fps_max, fps_avg, std_deviation] = process_one_result(raw[key])
 
+        # FIXME: we are calling process_one_result twice because we
+        # need to compute min/max to remove it. Perhaps a different
+        # method with just that
         if args.skip_min_max and len(raw[key]) >= 3:
             raw[key].remove(fps_min)
             raw[key].remove(fps_max)
 
-            [fps_min, fps_max, fps_avg] = process_one_result(raw[key])
+            [fps_min, fps_max, fps_avg, std_deviation] = process_one_result(raw[key])
 
         result_group = {}
-        result_group['fps_avg'] = fps_avg
+        result_group['fps_avg'] = [ fps_avg, std_deviation ]
         results[key] = result_group
 
     return results
@@ -108,13 +129,14 @@ def main():
     parser.add_argument("--skip-gfxrecon", action="store_true", help="If we should skip gfxreconstruct traces")
     parser.add_argument("--skip-apitrace", action="store_true", help="If we should skip apitrace traces")
     parser.add_argument("--skip-min-max", action="store_true", help="If we should remove one fps_min/max from the list of samples")
+    parser.add_argument("--show-std-deviation", action="store_true", help="If we should show the std deviation of the computed FPS average")
     parser.add_argument("--threshold", default=0.005, type=float, help="Threshold used to determine helped/HURT runs (default 0.005)")
     parser.add_argument("-x", "--exclude-traces", default=[], action="append", metavar="<regex>", help="Exclude matching traces (can be used more than once)")
     parser.add_argument("-t", "--include-traces", default=[], action="append", metavar="<regex>", help="Include matching traces (can be used more than once)")
 
     args = parser.parse_args()
 
-    # For the final analysis only avg is relevant
+    # For the final analysis only fps avg is relevant
     measurements = ["fps_avg"]
 
     include_filter = []
@@ -165,13 +187,15 @@ def main():
 
             after_count = after[p][m]
 
-            total_before[m] += before_count
-            total_after[m] += after_count
+            # We compute the helped/HURT with the avg, std_deviation
+            # right now is to hint how reliable that measure is
+            total_before[m] += before_count[0]
+            total_after[m] += after_count[0]
 
-            kk = after_count / before_count
+            kk = after_count[0] / before_count[0]
             if (abs(kk - 1.0) > args.threshold):
-                affected_before[m] += before_count
-                affected_after[m] += after_count
+                affected_before[m] += before_count[0]
+                affected_after[m] += after_count[0]
 
                 # Measuring only FPS, higher is always better
                 if (after_count > before_count):
@@ -181,18 +205,18 @@ def main():
 
         if not args.summary_only:
             helped.sort(
-                key=lambda k: after[k][m] if before[k][m] == 0 else float(before[k][m] - after[k][m]) / before[k][m])
+                key=lambda k: after[k][m] if before[k][m][0] == 0 else float(before[k][m][0] - after[k][m][0]) / before[k][m][0])
             for p in helped:
                 namestr = p
-                print(f"{m}  helped:  {get_result_string(namestr, before[p][m], after[p][m])}")
+                print(f"{m}  helped:  {get_result_string(namestr, before[p][m], after[p][m], args)}")
             if helped:
                 print("")
 
             hurt.sort(
-                key=lambda k: after[k][m] if before[k][m] == 0 else float(after[k][m] - before[k][m]) / before[k][m])
+                key=lambda k: after[k][m] if before[k][m][0] == 0 else float(after[k][m][0] - before[k][m][0]) / before[k][m][0])
             for p in hurt:
                 namestr = p
-                print(f"{m} HURT: {get_result_string(namestr, before[p][m], after[p][m])}")
+                print(f"{m} HURT: {get_result_string(namestr, before[p][m], after[p][m], args)}")
             if hurt:
                 print("")
 
