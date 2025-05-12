@@ -193,7 +193,7 @@ def main():
             total_after[m] += after_count[0]
 
             kk = after_count[0] / before_count[0]
-            if (abs(kk - 1.0) > args.threshold):
+            if (abs(kk - 1.0) >= args.threshold):
                 affected_before[m] += before_count[0]
                 affected_after[m] += after_count[0]
 
