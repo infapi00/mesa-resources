@@ -130,6 +130,7 @@ def main():
     parser.add_argument("--skip-apitrace", action="store_true", help="If we should skip apitrace traces")
     parser.add_argument("--skip-min-max", action="store_true", help="If we should remove one fps_min/max from the list of samples")
     parser.add_argument("--show-std-deviation", action="store_true", help="If we should show the std deviation of the computed FPS average")
+    parser.add_argument("--sort-by-std-deviation", action="store_true", help="If we should sort the results based on after std-deviation")
     parser.add_argument("--threshold", default=0.005, type=float, help="Threshold used to determine helped/HURT runs (default 0.005)")
     parser.add_argument("-x", "--exclude-traces", default=[], action="append", metavar="<regex>", help="Exclude matching traces (can be used more than once)")
     parser.add_argument("-t", "--include-traces", default=[], action="append", metavar="<regex>", help="Include matching traces (can be used more than once)")
@@ -204,16 +205,23 @@ def main():
                     hurt.append(p)
 
         if not args.summary_only:
-            helped.sort(
-                key=lambda k: after[k][m] if before[k][m][0] == 0 else float(before[k][m][0] - after[k][m][0]) / before[k][m][0])
+            if not args.sort_by_std_deviation:
+                helped.sort(
+                    key=lambda k: after[k][m] if before[k][m][0] == 0 else float(before[k][m][0] - after[k][m][0]) / before[k][m][0])
+            else:
+                helped.sort(key=lambda k: after[k][m][1])
+
             for p in helped:
                 namestr = p
                 print(f"{m}  helped:  {get_result_string(namestr, before[p][m], after[p][m], args)}")
             if helped:
                 print("")
 
-            hurt.sort(
-                key=lambda k: after[k][m] if before[k][m][0] == 0 else float(after[k][m][0] - before[k][m][0]) / before[k][m][0])
+            if not args.sort_by_std_deviation:
+                hurt.sort(
+                    key=lambda k: after[k][m] if before[k][m][0] == 0 else float(after[k][m][0] - before[k][m][0]) / before[k][m][0])
+            else:
+                hurt.sort(key=lambda k: after[k][m][1])
             for p in hurt:
                 namestr = p
                 print(f"{m} HURT: {get_result_string(namestr, before[p][m], after[p][m], args)}")
