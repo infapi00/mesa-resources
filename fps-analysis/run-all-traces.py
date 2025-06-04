@@ -34,10 +34,17 @@ def run_trace(args, filename, fps_file, num_samples):
 
         command = ['gfxrecon-replay']
         command += ['--log-level', 'fatal']
-        if args.rebind:
-            command += ['-m', 'rebind']
         if args.headless:
             command += ['--wsi', 'headless']
+
+        # FIXME: we have now two gfxreconstruct parameters that need
+        #  main script frontend wrapping (so parameters are
+        #  leaking). Perhaps we should find a general way to pass
+        #  specific parameters.
+        if args.rebind:
+            command += ['-m', 'rebind']
+        if args.remove_unsupported:
+            command += ['--remove-unsupported']
     elif file_extension == '.trace':
         if args.skip_apitrace:
             print("\tskipped")
@@ -149,7 +156,8 @@ def main():
     parser.add_argument("--num-samples", nargs='?', default=1, type=int, help="Number of times each trace is executed to get the (averaged) fps value. Not include the shaderdb run")
     parser.add_argument("--mesa-commit-list", nargs='+', action="extend", type=str, help="List of mesa commits to execute the script against")
     parser.add_argument("--mesa-directory", nargs='?', type=str, help="Mesa directory. Useful if we pass a list of mesa commits")
-    parser.add_argument("--rebind", action="store_true", help="If we call gfxrecon-replay with -m rebind")
+    parser.add_argument("--remove-unsupported", action="store_true", help="If we call gfxrecon-replay with --remove-unsupported. Ignored for apitrace")
+    parser.add_argument("--rebind", action="store_true", help="If we call gfxrecon-replay with -m rebind. Ignored for apitrace")
     parser.add_argument("--skip-apitrace", action="store_true", help="If we should skip running the apitrace traces")
     parser.add_argument("--skip-gfxrecon", action="store_true", help="If we should skip running the gfxreconstruct traces")
     parser.add_argument("--sleep-time", nargs='?', default=0, type=int, help="Sleep time between trace execution (not applied on cache warmup")
