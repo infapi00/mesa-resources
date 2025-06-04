@@ -81,7 +81,7 @@ def run_trace(args, filename, fps_file, num_samples):
                 # now.
                 for line in split:
                     if file_extension == '.gfxr':
-                        search = re.compile('Replay FPS')
+                        search = re.compile('Measured FPS')
                         fps_index = 0
                     else:
                         search = re.compile('Rendered')
