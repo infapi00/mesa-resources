@@ -12,6 +12,7 @@ import pathlib
 import re
 import shutil
 import subprocess
+import time
 
 # Sometimes we get a xcb failures on the gfxrecon replay, that we are
 # not sure how to fix or when we would be able to work on it. For now
@@ -61,6 +62,9 @@ def run_trace(args, filename, fps_file, num_samples):
                 output = subprocess.run(command,
                                         capture_output=True,
                                         check=True)
+                if args.verbose and args.sleep_time > 0:
+                    print(f"Waiting {args.sleep_time} seconds")
+                time.sleep(args.sleep_time)
 
                 # Parse FPS value. Note that the stdout of the
                 # gfxrecon-replay is not always the same, as for some
@@ -148,6 +152,7 @@ def main():
     parser.add_argument("--rebind", action="store_true", help="If we call gfxrecon-replay with -m rebind")
     parser.add_argument("--skip-apitrace", action="store_true", help="If we should skip running the apitrace traces")
     parser.add_argument("--skip-gfxrecon", action="store_true", help="If we should skip running the gfxreconstruct traces")
+    parser.add_argument("--sleep-time", nargs='?', default=0, type=int, help="Sleep time between trace execution (not applied on cache warmup")
     parser.add_argument("--traces-directory-list", nargs='+', default=["traces"], type=str, help="List of directories with the traces")
     parser.add_argument("--verbose", action="store_true", default=False, help="Enable to print additional debug messages")
 
