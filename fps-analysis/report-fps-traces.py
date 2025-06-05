@@ -6,6 +6,7 @@ import math
 import csv
 import pathlib
 import sys
+import statistics
 
 def format_percent(frac):
     """Converts a factional value (typically 0.0 to 1.0) to a string as a percentage"""
@@ -77,41 +78,19 @@ def get_results(filename, include_filter, exclude_filter):
 
     return results
 
-def process_one_result(list):
-    fps_accum = 0
-    fps_max = 0
-    fps_min = sys.float_info.max
-    std_deviation = 0
-    std_accum = 0
-
-    for fps in list:
-        fps_accum += fps
-        fps_max = max(fps, fps_max)
-        fps_min = min(fps, fps_min)
-
-    fps_avg = fps_accum / len(list)
-
-    for fps in list:
-        std_accum += pow(fps - fps_avg, 2)
-
-    std_deviation = math.sqrt(std_accum / len(list))
-
-    return [fps_min, fps_max, fps_avg, std_deviation]
-
 def process_results(raw, args):
     results = {}
 
     for key in raw:
-        [fps_min, fps_max, fps_avg, std_deviation] = process_one_result(raw[key])
+        fps_min = min(raw[key])
+        fps_max = max(raw[key])
 
-        # FIXME: we are calling process_one_result twice because we
-        # need to compute min/max to remove it. Perhaps a different
-        # method with just that
         if args.skip_min_max and len(raw[key]) >= 3:
             raw[key].remove(fps_min)
             raw[key].remove(fps_max)
 
-            [fps_min, fps_max, fps_avg, std_deviation] = process_one_result(raw[key])
+        fps_avg = statistics.mean(raw[key])
+        std_deviation = statistics.pstdev(raw[key], fps_avg)
 
         result_group = {}
         result_group['fps_avg'] = [ fps_avg, std_deviation ]
