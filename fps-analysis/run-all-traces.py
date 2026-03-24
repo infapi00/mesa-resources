@@ -81,24 +81,16 @@ def run_trace(args, filename, fps_file, num_samples):
                 split = output.stdout.splitlines()
                 fps = 0.0
 
-                # FIXME: this seems somewhat convoluted. I bet that
-                # there is way to get the FPS from the string with
-                # just one regex, without an index, and without
-                # tweaking based on gfxr vs apitrace. This works for
-                # now.
+                # regex below takes into account that gfxrecon and apitrace
+                # has a different format for the FPS output. Examples:
+                #   gfxrecon-replay: "...Measured FPS: 45.23..."
+                #   apitrace:        "...45.23 FPS"
+                fps_pattern = re.compile(r'(\d+\.?\d*)\s+fps|fps\W+(\d+\.?\d*)', re.IGNORECASE)
                 for line in split:
-                    if file_extension == '.gfxr':
-                        search = re.compile('Measured FPS')
-                        fps_index = 0
-                    else:
-                        search = re.compile('Rendered')
-                        fps_index = 2
                     line_str = line.decode('utf-8')
-                    match = search.search(line_str)
-                    if match is not None:
-                        float_search = re.findall(r"[-+]?\d*\.\d+|\d+", line_str)
-                        if float_search is not None:
-                            fps = float(float_search[fps_index])
+                    fps_match = fps_pattern.search(line_str)
+                    if fps_match:
+                        fps = float(fps_match.group(1) or fps_match.group(2))
 
                 if fps_file is not None:
                     new_line = os.path.basename(filename)
