@@ -10,16 +10,16 @@ import statistics
 
 def format_percent(frac):
     """Converts a factional value (typically 0.0 to 1.0) to a string as a percentage"""
-    if abs(frac) > 0.0 and abs(frac) < 0.0001:
+    if 0.0 < abs(frac) < 0.0001:
         return "<.01%"
     else:
-        return "{:.2f}%".format(frac * 100)
+        return f"{frac * 100:.2f}%"
 
 
 def get_delta(b, a):
     if b != 0 and a != 0:
         frac = float(a) / float(b) - 1.0
-        return ' ({})'.format(format_percent(frac))
+        return f' ({format_percent(frac)})'
     else:
         return ''
 
@@ -29,26 +29,24 @@ def format_num(n):
     if n - math.floor(n) < 0.01:
         return str(math.floor(n))
     else:
-        return "{:.2f}".format(n)
+        return f"{n:.2f}"
 
 
 def get_avg_std_deviation_string(b):
-    return "(" + format_num(b[0]) + " , " + format_num(b[1]) + ")"
+    return f"({format_num(b[0])} , {format_num(b[1])})"
 
 
 def change(b, a):
-    return format_num(b) + " -> " + format_num(a) + get_delta(b, a)
+    return f"{format_num(b)} -> {format_num(a)}{get_delta(b, a)}"
 
 
 def change_with_std_deviation(b, a):
-    return get_avg_std_deviation_string(b) + " -> " + get_avg_std_deviation_string(a) + get_delta(b[0], a[0])
+    return f"{get_avg_std_deviation_string(b)} -> {get_avg_std_deviation_string(a)}{get_delta(b[0], a[0])}"
 
 
 def get_result_string(p, b, a, args):
-    p = p + ": "
-    while len(p) < 50:
-        p = p + ' '
-    if (args.show_std_deviation):
+    p = (p + ": ").ljust(50)
+    if args.show_std_deviation:
         return p + change_with_std_deviation(b, a)
     else:
         return p + change(b[0], a[0])
@@ -68,13 +66,8 @@ def get_results(filename, include_filter, exclude_filter):
             if any(r.search(row[0]) for r in exclude_filter):
                 continue
 
-            if row[0] in results:
-                result_list = results[row[0]]
-            else:
-                result_list = []
-
+            result_list = results.setdefault(row[0], [])
             result_list.append(float(row[1]))
-            results[row[0]] = result_list
 
     return results
 
@@ -121,9 +114,9 @@ def main():
 
     include_filter = []
     exclude_filter = []
-    if (args.exclude_traces):
+    if args.exclude_traces:
         exclude_filter = [re.compile(f, flags=re.IGNORECASE) for f in args.exclude_traces]
-    if (args.include_traces):
+    if args.include_traces:
         include_filter = [re.compile(f, flags=re.IGNORECASE) for f in args.include_traces]
 
     before_raw = get_results(args.before, include_filter, exclude_filter)
@@ -154,10 +147,10 @@ def main():
 
         for p in before:
             file_extension = pathlib.Path(p).suffix
-            if (file_extension == '.gfxr' and args.skip_gfxrecon):
+            if file_extension == '.gfxr' and args.skip_gfxrecon:
                 continue
 
-            if (file_extension == '.trace' and args.skip_apitrace):
+            if file_extension == '.trace' and args.skip_apitrace:
                 continue
 
             before_count = before[p][m]
@@ -173,12 +166,12 @@ def main():
             total_after[m] += after_count[0]
 
             kk = after_count[0] / before_count[0]
-            if (abs(kk - 1.0) >= args.threshold):
+            if abs(kk - 1.0) >= args.threshold:
                 affected_before[m] += before_count[0]
                 affected_after[m] += after_count[0]
 
                 # Measuring only FPS, higher is always better
-                if (after_count > before_count):
+                if after_count > before_count:
                     helped.append(p)
                 else:
                     hurt.append(p)
@@ -191,8 +184,7 @@ def main():
                 helped.sort(key=lambda k: after[k][m][1])
 
             for p in helped:
-                namestr = p
-                print(f"{m}  helped:  {get_result_string(namestr, before[p][m], after[p][m], args)}")
+                print(f"{m}  helped:  {get_result_string(p, before[p][m], after[p][m], args)}")
             if helped:
                 print("")
 
@@ -202,8 +194,7 @@ def main():
             else:
                 hurt.sort(key=lambda k: after[k][m][1])
             for p in hurt:
-                namestr = p
-                print(f"{m} HURT: {get_result_string(namestr, before[p][m], after[p][m], args)}")
+                print(f"{m} HURT: {get_result_string(p, before[p][m], after[p][m], args)}")
             if hurt:
                 print("")
 
@@ -241,23 +232,18 @@ def main():
             any_helped_or_hurt = True
 
         if num_helped[m] > 0 or num_hurt[m] > 0:
-            print("total {0} in all runs: {1}\n"
-                  "total {0} in affected (through threshold) runs: {2}\n"
-                  "helped: {3}\n"
-                  "HURT: {4}".format(
-                      m,
-                      change(total_before[m], total_after[m]),
-                      change(affected_before[m], affected_after[m]),
-                      num_helped[m],
-                      num_hurt[m]))
+            print(f"total {m} in all runs: {change(total_before[m], total_after[m])}\n"
+                  f"total {m} in affected (through threshold) runs: {change(affected_before[m], affected_after[m])}\n"
+                  f"helped: {num_helped[m]}\n"
+                  f"HURT: {num_hurt[m]}")
 
             # FIXME: not printing the abs/rel statistics
             print("")
 
 
     if lost or gained:
-        print(f"LOST:   {str(len(lost))}")
-        print(f"GAINED: {str(len(gained))}")
+        print(f"LOST:   {len(lost)}")
+        print(f"GAINED: {len(gained)}")
     else:
         if not any_helped_or_hurt:
             print("No changes.")
