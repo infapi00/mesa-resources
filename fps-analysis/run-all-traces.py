@@ -49,9 +49,7 @@ def run_trace(args, filename, fps_file, num_samples):
         if args.skip_apitrace:
             print("\tskipped")
             return
-        command = ['apitrace']
-        command += ['replay']
-        command += ['-b']
+        command = ['apitrace', 'replay', '-b']
         if args.headless:
             command += ['--headless']
     else:
@@ -93,20 +91,17 @@ def run_trace(args, filename, fps_file, num_samples):
                         fps = float(fps_match.group(1) or fps_match.group(2))
 
                 if fps_file is not None:
-                    new_line = os.path.basename(filename)
-                    new_line += ',' + str(fps)
-                    new_line += '\n'
-                    fps_file.write(new_line)
+                    fps_file.write(f"{os.path.basename(filename)},{fps}\n")
 
             except Exception as err:
                 print(f"ERROR executing trace {filename} : {type(err).__name__} was raised: {err}")
                 if attempt < MAX_ATTEMPTS:
-                    print(f"\tRetrying to execute trace {filename}. Remaining attempts {str(remaining_attempts)}")
-                remaining_attempts = remaining_attempts - 1
+                    print(f"\tRetrying to execute trace {filename}. Remaining attempts {remaining_attempts}")
+                remaining_attempts -= 1
             else:
                 break
         else:
-            print(f"Consumed {str(MAX_ATTEMPTS)} attempts for trace {filename}. Discarding trace")
+            print(f"Consumed {MAX_ATTEMPTS} attempts for trace {filename}. Discarding trace")
 
 # Note that although we provide a number of samples on the command
 # line arguments, we still need to pass it as a parameter, in order to
@@ -125,14 +120,14 @@ def run_traces(args, fps_file, num_samples):
                     print(f"{f} is not a file")
 
 def run_helper(args, results_directory):
-    if os.path.exists(results_directory) is False:
+    if not os.path.exists(results_directory):
         os.mkdir(results_directory)
 
-    if args.disable_cache_run is False:
+    if not args.disable_cache_run:
         if args.verbose:
             print("Warming up shader cache")
         run_traces(args, None, 1)
-    fps_file_name = results_directory + '/fps-stats-' + datetime.now().strftime("%Y-%m-%d_%H:%M:%S")+'.txt'
+    fps_file_name = f"{results_directory}/fps-stats-{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}.txt"
     with open(fps_file_name, 'w') as fps_file:
         if args.verbose:
             print(f"Starting FPS run. Writing stats on file {fps_file_name}")
@@ -167,20 +162,20 @@ def main():
         return
 
     # We ensure that the on-disk-cache is enabled, as we want hot-cache fps numbers
-    os.unsetenv("MESA_GLSL_CACHE_DISABLE")
-    os.unsetenv("MESA_SHADER_CACHE_DISABLE")
+    os.environ.pop("MESA_GLSL_CACHE_DISABLE", None)
+    os.environ.pop("MESA_SHADER_CACHE_DISABLE", None)
 
     # FIXME: hardcoded. Perhaps a new command line argument (but we already have a lot)
     base_results_directory = "results"
 
-    if (args.mesa_commit_list is None):
+    if args.mesa_commit_list is None:
         run_helper(args, base_results_directory)
     else:
         index = 0
         for commit in args.mesa_commit_list:
-            results_directory = base_results_directory + "-" + str(index) + "-" + commit
+            results_directory = f"{base_results_directory}-{index}-{commit}"
             mesa_directory = os.path.expanduser(args.mesa_directory)
-            command =  ['git', 'checkout', commit]
+            command = ['git', 'checkout', commit]
             print(command)
 
             try:
@@ -204,7 +199,7 @@ def main():
                 print(f"ERROR moving back to current mesa branch : {type(err).__name__} was raised: {err}")
                 return
 
-            index = index + 1
+            index += 1
 
 
 if __name__ == "__main__":
