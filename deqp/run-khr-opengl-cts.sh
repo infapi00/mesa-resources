@@ -23,4 +23,4 @@ deqp-runner run --deqp ./glcts --output gles31.log --caselist ~/mesa/source/vk-g
 deqp-runner run --deqp ./glcts --output gl30.log   --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gl/khronos_mustpass/main/gl30-main.txt -- --deqp-terminate-on-device-lost=disable --deqp-gl-config-name=rgba8888d24s8ms0
 deqp-runner run --deqp ./glcts --output gl31.log   --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gl/khronos_mustpass/main/gl31-main.txt -- --deqp-terminate-on-device-lost=disable --deqp-gl-config-name=rgba8888d24s8ms0
 deqp-runner run --deqp ./glcts --output egl.log    --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/egl/aosp_mustpass/main/egl-main.txt -- --deqp-terminate-on-device-lost=disable --deqp-gl-config-name=rgba8888d24s8ms0
-cat gles2.log/failures.csv gles3.log/failures.csv gles31.log/failures.csv gl30.log/failures.csv gl31.log/failures.csv egl.log/failures.csv > all-opengl-cts.csv
+cat gles2.log/failures.csv gles3.log/failures.csv gles31.log/failures.csv gl30.log/failures.csv gl31.log/failures.csv egl.log/failures.csv > all-khr-cts-failures.csv
