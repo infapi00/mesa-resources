@@ -1,15 +1,26 @@
 #!/bin/bash
 #
 # This script is a wrapper over deqp-runner to run all the mandatory
-# tests for gles/egl/gl. Note that this would run only with the
-# default configuration, while a conformance run (ie: ./cts-runner
-# --type=es31), would run only for es31 but with a lot of different
-# configurations.
+# tests for gles/egl/gl. For the case of gl, up to gl31, as this
+# script is tailored to be used on drivers for embedded, like v3d,
+# panfrost, etc.
 
-deqp-runner run --deqp ./glcts --output gles2.log  --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gles/khronos_mustpass/main/gles2-khr-main.txt
-deqp-runner run --deqp ./glcts --output gles3.log  --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gles/khronos_mustpass/main/gles3-khr-main.txt
-deqp-runner run --deqp ./glcts --output gles31.log --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gles/khronos_mustpass/main/gles31-khr-main.txt
-deqp-runner run --deqp ./glcts --output gl30.log   --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gl/khronos_mustpass/main/gl30-main.txt -- --deqp-terminate-on-device-lost=disable
-deqp-runner run --deqp ./glcts --output gl31.log   --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gl/khronos_mustpass/main/gl31-main.txt -- --deqp-terminate-on-device-lost=disable
-deqp-runner run --deqp ./glcts --output egl.log    --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/egl/aosp_mustpass/main/egl-main.txt -- --deqp-terminate-on-device-lost=disable
+# In order to run it on a reasonable time, this script only runs one
+# configuration. It let the default options for most of the
+# parameters, except for deqp-gl-config name, that uses explicitly
+# rgba8888d24s8ms0 configuration, to ensure that we are using a
+# conformance-required option. But note that for conformance runs,
+# cts-runner uses several configurations.
+
+# For GL we also need to use the option
+# --deqp-terminate-on-device-lost=disable to avoid crashes on drivers
+# that lacks KHR_robustness. This is a workaround, and the problem
+# needs to be solved on CTS. There is already a CTS issue to track it.
+
+deqp-runner run --deqp ./glcts --output gles2.log  --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gles/khronos_mustpass/main/gles2-khr-main.txt -- --deqp-gl-config-name=rgba8888d24s8ms0
+deqp-runner run --deqp ./glcts --output gles3.log  --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gles/khronos_mustpass/main/gles3-khr-main.txt -- --deqp-gl-config-name=rgba8888d24s8ms0
+deqp-runner run --deqp ./glcts --output gles31.log --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gles/khronos_mustpass/main/gles31-khr-main.txt -- --deqp-gl-config-name=rgba8888d24s8ms0
+deqp-runner run --deqp ./glcts --output gl30.log   --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gl/khronos_mustpass/main/gl30-main.txt -- --deqp-terminate-on-device-lost=disable --deqp-gl-config-name=rgba8888d24s8ms0
+deqp-runner run --deqp ./glcts --output gl31.log   --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gl/khronos_mustpass/main/gl31-main.txt -- --deqp-terminate-on-device-lost=disable --deqp-gl-config-name=rgba8888d24s8ms0
+deqp-runner run --deqp ./glcts --output egl.log    --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/egl/aosp_mustpass/main/egl-main.txt -- --deqp-terminate-on-device-lost=disable --deqp-gl-config-name=rgba8888d24s8ms0
 cat gles2.log/failures.csv gles3.log/failures.csv gles31.log/failures.csv gl30.log/failures.csv gl31.log/failures.csv egl.log/failures.csv > all-opengl-cts.csv
