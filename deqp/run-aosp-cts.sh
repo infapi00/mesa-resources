@@ -19,8 +19,8 @@
 # file is not found. As the default value for that option is '', it
 # raises that warning if not specified.
 
-deqp-runner run --deqp ./glcts --output gles2-aosp.log --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gles/aosp_mustpass/main/gles2-main.txt -- --deqp-gl-config-name=rgba8888d24s8ms0 --deqp-waiver-file=~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/waivers/waivers.xml
-deqp-runner run --deqp ./glcts --output gles3-aosp.log --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gles/aosp_mustpass/main/gles3-main.txt -- --deqp-gl-config-name=rgba8888d24s8ms0 --deqp-waiver-file=~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/waivers/waivers.xml
-deqp-runner run --deqp ./glcts --output gles31-aosp.log --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gles/aosp_mustpass/main/gles31-main.txt -- --deqp-gl-config-name=rgba8888d24s8ms0 --deqp-waiver-file=~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/waivers/waivers.xml
+deqp-runner run --deqp ./glcts --output gles2-aosp.log --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gles/aosp_mustpass/main/gles2-main.txt -- --deqp-gl-config-name=rgba8888d24s8ms0 --deqp-waiver-file=gl_cts/data/mustpass/waivers/waivers.xml
+deqp-runner run --deqp ./glcts --output gles3-aosp.log --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gles/aosp_mustpass/main/gles3-main.txt -- --deqp-gl-config-name=rgba8888d24s8ms0 --deqp-waiver-file=gl_cts/data/mustpass/waivers/waivers.xml
+deqp-runner run --deqp ./glcts --output gles31-aosp.log --caselist ~/mesa/source/vk-gl-cts/external/openglcts/data/gl_cts/data/mustpass/gles/aosp_mustpass/main/gles31-main.txt -- --deqp-gl-config-name=rgba8888d24s8ms0 --deqp-waiver-file=gl_cts/data/mustpass/waivers/waivers.xml
 
 cat gles2-aosp.log/failures.csv gles3-aosp.log/failures.csv gles31-aosp.log/failures.csv > all-aosp-cts-failures.csv
