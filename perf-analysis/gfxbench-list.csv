@@ -1,0 +1,17 @@
+gl_alu,800,600
+gl_alu,32,32
+gl_alu2,800,600
+gl_alu2,32,32
+gl_blending,800,600
+gl_blending,32,32
+gl_egypt,800,600
+gl_egypt,32,32
+gl_fill2,800,600
+gl_fill2,32,32
+gl_manhattan31,1920,1080
+gl_manhattan31,800,600
+gl_manhattan31,32,32
+gl_manhattan,800,600
+gl_manhattan,32,32
+gl_trex,800,600
+gl_trex,32,32
