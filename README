@@ -7,6 +7,8 @@ A brief description of what it contains:
 
  * deqp: basic stuff for deqp.
 
+ * perf-analysis: some scripts to run demos and compare perf outcome
+
  * piglit: basic stuff for piglit.
 
  * testing: tools and scripts to use while testing.
