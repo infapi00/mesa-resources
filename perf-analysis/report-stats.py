@@ -1,4 +1,21 @@
 #!/usr/bin/env python3
+#
+# This script creates a performance report based on a before.csv and
+# after.csv file, that contains a stat of running a given demo, trace,
+# etc. Each of those execution can be run several times (samples), so
+# the script computes an average of the stat. This sis the format of
+# the csv file:
+#
+#   name_demo_0, stat0
+#   name_demo_0, stat1
+#   name_demo_1, stat3
+#   name_demo_1, stat4
+#
+# This script is heavily inspired on shader-db/report.py script, but
+# simplified, and focused on just one stat at a time.
+#
+# To print the outcome it uses a label. The default value of the label
+# is "fps", but can be configured when executed.
 
 import re
 import argparse
@@ -55,7 +72,7 @@ def get_result_string(p, b, a, args):
 def get_results(filename, include_filter, exclude_filter):
     results = {}
 
-    # Each line has the format "trace_name,fps", and can be more that one trace_name entry
+    # Each line has the format "trace_name,stat", and can be more that one trace_name entry
     with open(filename) as file_obj:
         reader_obj = csv.reader(file_obj)
         for row in reader_obj:
@@ -71,37 +88,51 @@ def get_results(filename, include_filter, exclude_filter):
 
     return results
 
-def process_results(raw, args):
+def process_results(raw, args, measurement_key):
     results = {}
 
     for key in raw:
-        fps_min = min(raw[key])
-        fps_max = max(raw[key])
+        stats_min = min(raw[key])
+        stats_max = max(raw[key])
 
         if args.skip_min_max and len(raw[key]) >= 3:
-            raw[key].remove(fps_min)
-            raw[key].remove(fps_max)
+            raw[key].remove(stats_min)
+            raw[key].remove(stats_max)
 
-        fps_avg = statistics.mean(raw[key])
-        std_deviation = statistics.pstdev(raw[key], fps_avg)
+        stats_avg = statistics.mean(raw[key])
+        std_deviation = statistics.pstdev(raw[key], stats_avg)
 
         result_group = {}
-        result_group['fps_avg'] = [ fps_avg, std_deviation ]
+        result_group[measurement_key] = [ stats_avg, std_deviation ]
         results[key] = result_group
 
     return results
+
+
+def get_sort_key(before, after, m, k, invert):
+    before_avg = before[k][m][0]
+    after_avg = after[k][m][0]
+
+    if before_avg == 0:
+        return after[k][m]
+
+    delta = (after_avg - before_avg) / before_avg
+    return -delta if invert else delta
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("before", help="The output of the original code")
     parser.add_argument("after", help="The output of the new code")
+    parser.add_argument("--label", default="fps", help="Label used for the stat being compared (default: fps)")
+    parser.add_argument("--smaller-is-better", action="store_true", default=False,
+                        help="If a smaller value of the stat is better (default: a bigger value is better)")
     parser.add_argument("--summary-only", "-s", action="store_true", default=False,
                         help="Do not show the trace helped / hurt data")
     parser.add_argument("--skip-gfxrecon", action="store_true", help="If we should skip gfxreconstruct traces")
     parser.add_argument("--skip-apitrace", action="store_true", help="If we should skip apitrace traces")
-    parser.add_argument("--skip-min-max", action="store_true", help="If we should remove one fps_min/max from the list of samples")
-    parser.add_argument("--show-std-deviation", action="store_true", help="If we should show the std deviation of the computed FPS average")
+    parser.add_argument("--skip-min-max", action="store_true", help="If we should remove one stats_min/max from the list of samples")
+    parser.add_argument("--show-std-deviation", action="store_true", help="If we should show the std deviation of the computed stats average")
     parser.add_argument("--sort-by-std-deviation", action="store_true", help="If we should sort the results based on after std-deviation")
     parser.add_argument("--threshold", default=0.005, type=float, help="Threshold used to determine helped/HURT runs (default 0.005)")
     parser.add_argument("-x", "--exclude-traces", default=[], action="append", metavar="<regex>", help="Exclude matching traces (can be used more than once)")
@@ -109,8 +140,11 @@ def main():
 
     args = parser.parse_args()
 
-    # For the final analysis only fps avg is relevant
-    measurements = ["fps_avg"]
+    higher_is_better = not args.smaller_is_better
+
+    # For the final analysis only the stat avg is relevant
+    measurement_key = f"{args.label}_avg"
+    measurements = [measurement_key]
 
     include_filter = []
     exclude_filter = []
@@ -120,9 +154,9 @@ def main():
         include_filter = [re.compile(f, flags=re.IGNORECASE) for f in args.include_traces]
 
     before_raw = get_results(args.before, include_filter, exclude_filter)
-    before = process_results(before_raw, args)
+    before = process_results(before_raw, args, measurement_key)
     after_raw = get_results(args.after, include_filter, exclude_filter)
-    after = process_results(after_raw, args)
+    after = process_results(after_raw, args, measurement_key)
 
     total_before = {}
     total_after = {}
@@ -133,7 +167,7 @@ def main():
 
     #FIXME: not measuring confidence intervals. It is not clear if
     #that is representative here, and in case of being, we need to
-    #tweak the values for fps
+    #tweak the values for the stat
 
     # Filling up helper/hurt
     for m in measurements:
@@ -170,16 +204,21 @@ def main():
                 affected_before[m] += before_count[0]
                 affected_after[m] += after_count[0]
 
-                # Measuring only FPS, higher is always better
-                if after_count > before_count:
+                # Whether a bigger or a smaller value is an improvement
+                # depends on --smaller-is-better
+                if higher_is_better:
+                    improved = after_count[0] > before_count[0]
+                else:
+                    improved = after_count[0] < before_count[0]
+
+                if improved:
                     helped.append(p)
                 else:
                     hurt.append(p)
 
         if not args.summary_only:
             if not args.sort_by_std_deviation:
-                helped.sort(
-                    key=lambda k: after[k][m] if before[k][m][0] == 0 else float(before[k][m][0] - after[k][m][0]) / before[k][m][0])
+                helped.sort(key=lambda k: get_sort_key(before, after, m, k, higher_is_better))
             else:
                 helped.sort(key=lambda k: after[k][m][1])
 
@@ -189,8 +228,7 @@ def main():
                 print("")
 
             if not args.sort_by_std_deviation:
-                hurt.sort(
-                    key=lambda k: after[k][m] if before[k][m][0] == 0 else float(after[k][m][0] - before[k][m][0]) / before[k][m][0])
+                hurt.sort(key=lambda k: get_sort_key(before, after, m, k, not higher_is_better))
             else:
                 hurt.sort(key=lambda k: after[k][m][1])
             for p in hurt:
