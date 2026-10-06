@@ -228,7 +228,7 @@ def main():
                 print("")
 
             if not args.sort_by_std_deviation:
-                hurt.sort(key=lambda k: get_sort_key(before, after, m, k, not higher_is_better))
+                hurt.sort(key=lambda k: get_sort_key(before, after, m, k, higher_is_better))
             else:
                 hurt.sort(key=lambda k: after[k][m][1])
             for p in hurt:
