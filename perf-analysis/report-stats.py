@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 #
-# This script creates a performance report based on a before.csv and
-# after.csv file, that contains a stat of running a given demo, trace,
-# etc. Each of those execution can be run several times (samples), so
-# the script computes an average of the stat. This sis the format of
-# the csv file:
+# This script creates a performance report based on a before.csv
+# (reference) file and one or more after.csv files, that contains a
+# stat of running a given demo, trace, etc. If more than one after
+# file is provided, each one is compared against the reference. A
+# final table with all of them side by side is printed. Each of those
+# execution can be run several times (samples), so the script computes
+# an average of the stat. This is the format of the csv file:
 #
 #   name_demo_0, stat0
 #   name_demo_0, stat1
@@ -57,18 +59,6 @@ def change(b, a):
     return f"{format_num(b)} -> {format_num(a)}{get_delta(b, a)}"
 
 
-def change_with_std_deviation(b, a):
-    return f"{get_avg_std_deviation_string(b)} -> {get_avg_std_deviation_string(a)}{get_delta(b[0], a[0])}"
-
-
-def get_result_string(p, b, a, args):
-    p = (p + ": ").ljust(50)
-    if args.show_std_deviation:
-        return p + change_with_std_deviation(b, a)
-    else:
-        return p + change(b[0], a[0])
-
-
 def get_results(filename, include_filter, exclude_filter):
     results = {}
 
@@ -114,33 +104,89 @@ def get_sort_key(before, after, m, k, invert):
     after_avg = after[k][m][0]
 
     if before_avg == 0:
-        return after[k][m]
+        return after_avg
 
     delta = (after_avg - before_avg) / before_avg
     return -delta if invert else delta
 
 
+def format_stat(stat, args):
+    if args.show_std_deviation:
+        return get_avg_std_deviation_string(stat)
+    else:
+        return format_num(stat[0])
+
+
+def print_comparison_table(before, afters, measurements, args):
+    """Prints all the after results side by side, with the delta against the reference"""
+    print(f"Reference: {args.before}")
+    for i, (filename, _) in enumerate(afters):
+        print(f"after{i}:    {filename}")
+    print("")
+
+    names = list(before)
+    for _, after in afters:
+        names += [p for p in after if p not in names]
+
+    sort_after = afters[args.sort_by_after][1]
+
+    for m in measurements:
+        # Traces without a value on the reference or on the after used
+        # to sort are placed at the end
+        sortable = [p for p in names if p in before and p in sort_after]
+        unsortable = [p for p in names if p not in sortable]
+        if args.sort_by_std_deviation:
+            sortable.sort(key=lambda k: sort_after[k][m][1])
+        else:
+            sortable.sort(key=lambda k: get_sort_key(before, sort_after, m, k, not args.smaller_is_better))
+        names = sortable + unsortable
+
+        rows = [[m, "reference"] + [f"after{i}" for i in range(len(afters))]]
+        for p in names:
+            row = [p]
+            before_stat = before[p][m] if p in before else None
+            row.append(format_stat(before_stat, args) if before_stat is not None else "-")
+            for _, after in afters:
+                if p not in after:
+                    row.append("-")
+                    continue
+                after_stat = after[p][m]
+                if before_stat is None:
+                    row.append(format_stat(after_stat, args))
+                else:
+                    row.append(f"{format_stat(after_stat, args)}{get_delta(before_stat[0], after_stat[0])}")
+            rows.append(row)
+
+        widths = [max(len(r[i]) for r in rows) for i in range(len(rows[0]))]
+        for r in rows:
+            print(r[0].ljust(widths[0]) + "".join("  " + c.rjust(w) for c, w in zip(r[1:], widths[1:])))
+        print("")
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("before", help="The output of the original code")
-    parser.add_argument("after", help="The output of the new code")
+    parser.add_argument("before", help="The output of the original code (reference)")
+    parser.add_argument("after", nargs="+", help="The output of the new code (one or more files)")
     parser.add_argument("--label", default="fps", help="Label used for the stat being compared (default: fps)")
     parser.add_argument("--smaller-is-better", action="store_true", default=False,
                         help="If a smaller value of the stat is better (default: a bigger value is better)")
     parser.add_argument("--summary-only", "-s", action="store_true", default=False,
-                        help="Do not show the trace helped / hurt data")
+                        help="Do not show the per-trace comparison table")
     parser.add_argument("--skip-gfxrecon", action="store_true", help="If we should skip gfxreconstruct traces")
     parser.add_argument("--skip-apitrace", action="store_true", help="If we should skip apitrace traces")
     parser.add_argument("--skip-min-max", action="store_true", help="If we should remove one stats_min/max from the list of samples")
     parser.add_argument("--show-std-deviation", action="store_true", help="If we should show the std deviation of the computed stats average")
     parser.add_argument("--sort-by-std-deviation", action="store_true", help="If we should sort the results based on after std-deviation")
+    parser.add_argument("--sort-by-after", default=0, type=int, metavar="N",
+                        help="Index of the after file used to sort the results (default: 0, the first after file)")
     parser.add_argument("--threshold", default=0.005, type=float, help="Threshold used to determine helped/HURT runs (default 0.005)")
     parser.add_argument("-x", "--exclude-traces", default=[], action="append", metavar="<regex>", help="Exclude matching traces (can be used more than once)")
     parser.add_argument("-t", "--include-traces", default=[], action="append", metavar="<regex>", help="Include matching traces (can be used more than once)")
 
     args = parser.parse_args()
 
-    higher_is_better = not args.smaller_is_better
+    if not 0 <= args.sort_by_after < len(args.after):
+        parser.error(f"--sort-by-after must be between 0 and {len(args.after) - 1}")
 
     # For the final analysis only the stat avg is relevant
     measurement_key = f"{args.label}_avg"
@@ -155,8 +201,23 @@ def main():
 
     before_raw = get_results(args.before, include_filter, exclude_filter)
     before = process_results(before_raw, args, measurement_key)
-    after_raw = get_results(args.after, include_filter, exclude_filter)
-    after = process_results(after_raw, args, measurement_key)
+
+    afters = []
+    for filename in args.after:
+        after_raw = get_results(filename, include_filter, exclude_filter)
+        afters.append((filename, process_results(after_raw, args, measurement_key)))
+
+    if not args.summary_only:
+        print_comparison_table(before, afters, measurements, args)
+
+    for filename, after in afters:
+        print(f"===== {args.before} -> {filename} =====")
+        print("")
+        report(before, after, measurements, args)
+
+
+def report(before, after, measurements, args):
+    higher_is_better = not args.smaller_is_better
 
     total_before = {}
     total_after = {}
@@ -216,27 +277,6 @@ def main():
                 else:
                     hurt.append(p)
 
-        if not args.summary_only:
-            if not args.sort_by_std_deviation:
-                helped.sort(key=lambda k: get_sort_key(before, after, m, k, higher_is_better))
-            else:
-                helped.sort(key=lambda k: after[k][m][1])
-
-            for p in helped:
-                print(f"{m}  helped:  {get_result_string(p, before[p][m], after[p][m], args)}")
-            if helped:
-                print("")
-
-            if not args.sort_by_std_deviation:
-                hurt.sort(key=lambda k: get_sort_key(before, after, m, k, higher_is_better))
-            else:
-                hurt.sort(key=lambda k: after[k][m][1])
-            for p in hurt:
-                print(f"{m} HURT: {get_result_string(p, before[p][m], after[p][m], args)}")
-            if hurt:
-                print("")
-
-
         num_helped[m] = len(helped)
         num_hurt[m] = len(hurt)
 
@@ -250,19 +290,6 @@ def main():
     for p in after:
         if p not in before:
             gained.append(p)
-
-    if not args.summary_only:
-        lost.sort()
-        for p in lost:
-            print(f"LOST:   {p}")
-        if lost:
-            print("")
-
-        gained.sort()
-        for p in gained:
-            print(f"GAINED: {p}")
-        if gained:
-            print("")
 
     any_helped_or_hurt = False
     for m in measurements:
@@ -285,6 +312,7 @@ def main():
     else:
         if not any_helped_or_hurt:
             print("No changes.")
+
 
 if __name__ == "__main__":
     main()
